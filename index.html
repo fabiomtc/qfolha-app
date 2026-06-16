@@ -208,7 +208,7 @@
     top: 50%; left:50%; transform: translate(-50%,-50%) scale(1);
   }
   .splash-logo-wrap.to-top{
-    top: 64px; transform: translate(-50%,0) scale(0.21);
+    top: 64px; transform: translate(-50%,0) scale(0.16);
   }
   .splash-logo-wrap.to-top .logo-text{ filter: drop-shadow(0 0 0 transparent); }
 
@@ -218,8 +218,8 @@
   .logo-text{ font-size:26px; font-weight:800; letter-spacing:-0.02em; color:#fff; }
   .logo-text.dark-variant{ color: var(--text); }
   .logo-tagline{
-    font-size:19px; color: rgba(255,255,255,.85); margin-top:2px; font-weight:500;
-    text-align:center; line-height:1.5; max-width:320px;
+    font-size:23px; color: rgba(255,255,255,.85); margin-top:2px; font-weight:500;
+    text-align:center; line-height:1.5; max-width:360px;
   }
 
   /* ============ HOME SHELL ============ */
@@ -827,7 +827,7 @@
   <section id="view-splash" class="hidden">
     <div class="splash-logo-wrap" id="splash-logo">
       <div class="logo-mark" style="gap:24px;">
-        <div class="logo-text" style="font-size:88px;">QFolha</div>
+        <div class="logo-text" style="font-size:112px;">QFolha</div>
         <div class="logo-tagline" id="splash-tagline">O custo real<br>da sua equipe, sem complicação.</div>
       </div>
     </div>
@@ -945,15 +945,15 @@
       splashLogo.classList.add('to-top');
       const tagline = document.getElementById('splash-tagline');
       if (tagline) tagline.style.display = 'none';
-    }, 1400);
+    }, 2400);
 
     setTimeout(()=>{
       viewSplash.classList.add('fade-out');
-    }, 2600);
+    }, 3600);
 
     setTimeout(()=>{
       viewSplash.classList.add('hidden');
-    }, 3200);
+    }, 4200);
   }
 
   /* ============================================================
