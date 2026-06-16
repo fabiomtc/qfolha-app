@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#2F4F4F" />
+<title>QFolha — O custo real da sua equipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+  /* ============ DESIGN TOKENS ============ */
+  :root{
+    --bg: #F5F5F7;
+    --surface: #FFFFFF;
+    --surface-2: #F0F0F2;
+    --text: #1D1D1F;
+    --text-secondary: #6E6E73;
+    --border: rgba(0,0,0,0.07);
+    --primary: #2F4F4F;
+    --primary-strong: #213939;
+    --primary-soft: rgba(47,79,79,0.08);
+    --accent: #D98E3C;
+    --accent-soft: rgba(217,142,60,0.14);
+    --danger: #FF3B30;
+    --chart-3: #7FA6A6;
+    --chart-4: #C7C7CC;
+    --shadow: 0 2px 18px rgba(0,0,0,0.045), 0 1px 2px rgba(0,0,0,0.03);
+    --radius-lg: 22px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+    --radius-pill: 999px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg: #000000;
+      --surface: #1C1C1E;
+      --surface-2: #2C2C2E;
+      --text: #F5F5F7;
+      --text-secondary: #98989D;
+      --border: rgba(255,255,255,0.09);
+      --primary: #7FA6A6;
+      --primary-strong: #5C8585;
+      --primary-soft: rgba(127,166,166,0.14);
+      --accent: #E0A85C;
+      --accent-soft: rgba(224,168,92,0.16);
+      --danger: #FF453A;
+      --chart-3: #3E5C5C;
+      --chart-4: #545458;
+      --shadow: 0 2px 24px rgba(0,0,0,0.55);
+    }
+  }
+  html[data-theme="light"]{
+    --bg: #F5F5F7; --surface: #FFFFFF; --surface-2: #F0F0F2; --text: #1D1D1F;
+    --text-secondary: #6E6E73; --border: rgba(0,0,0,0.07); --primary: #2F4F4F;
+    --primary-strong: #213939; --primary-soft: rgba(47,79,79,0.08);
+    --accent: #D98E3C; --accent-soft: rgba(217,142,60,0.14); --danger:#FF3B30;
+    --chart-3: #7FA6A6; --chart-4: #C7C7CC;
+    --shadow: 0 2px 18px rgba(0,0,0,0.045), 0 1px 2px rgba(0,0,0,0.03);
+  }
+  html[data-theme="dark"]{
+    --bg: #000000; --surface: #1C1C1E; --surface-2: #2C2C2E; --text: #F5F5F7;
+    --text-secondary: #98989D; --border: rgba(255,255,255,0.09); --primary: #7FA6A6;
+    --primary-strong: #5C8585; --primary-soft: rgba(127,166,166,0.14);
+    --accent: #E0A85C; --accent-soft: rgba(224,168,92,0.16); --danger:#FF453A;
+    --chart-3: #3E5C5C; --chart-4: #545458;
+    --shadow: 0 2px 24px rgba(0,0,0,0.55);
+  }
+
+  /* ============ RESET / BASE ============ */
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    transition: background .35s ease, color .35s ease;
+  }
+  h1,h2,h3,h4{ margin:0; letter-spacing:-0.02em; font-weight:800; }
+  p{ margin:0; }
+  button{ font-family:inherit; border:none; background:none; cursor:pointer; color:inherit; }
+  input, select{ font-family:inherit; }
+
+  /* ============ APP SHELL ============ */
+  #app{
+    max-width: 480px;
+    margin: 0 auto;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    display:flex;
+    flex-direction:column;
+    background: var(--bg);
+  }
+
+  /* ============ UTILITIES ============ */
+  .card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 20px;
+  }
+  .label-eyebrow{
+    font-size: 12px;
+    font-weight:700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .text-secondary{ color: var(--text-secondary); }
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    font-weight:700; font-size:15px;
+    padding: 15px 22px;
+    border-radius: var(--radius-pill);
+    transition: transform .15s ease, opacity .15s ease, background .2s ease;
+    user-select:none;
+  }
+  .btn:active{ transform: scale(0.97); }
+  .btn svg{ width:18px; height:18px; flex-shrink:0; }
+  .btn-primary{ background: var(--primary); color:#fff; }
+  .btn-primary:disabled{ opacity:.35; pointer-events:none; }
+  .btn-secondary{ background: var(--surface-2); color: var(--text); }
+  .btn-ghost{ background:transparent; color: var(--primary); font-weight:700; }
+
+  .field-label{
+    font-size:13px; font-weight:600; color: var(--text-secondary);
+    margin-bottom:6px; display:block;
+  }
+  .field-input{
+    width:100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 13px 14px;
+    font-size:16px;
+    color: var(--text);
+    outline:none;
+    transition: border-color .15s ease, background .2s ease;
+  }
+  .field-input:focus{ border-color: var(--primary); background: var(--surface); }
+
+  /* Segmented control */
+  .segmented{
+    display:flex; background: var(--surface-2); border-radius: var(--radius-sm);
+    padding: 4px; gap:4px; border:1px solid var(--border);
+  }
+  .segmented button{
+    flex:1; padding:10px 8px; border-radius: 9px; font-size:13.5px; font-weight:700;
+    color: var(--text-secondary); transition: all .2s ease; text-align:center;
+    line-height:1.25;
+  }
+  .segmented button.active{
+    background: var(--surface); color: var(--primary); box-shadow: var(--shadow);
+  }
+
+  /* ============ VIEWS ============ */
+  .view{
+    flex:1; min-height:0; display:flex; flex-direction:column;
+    animation: fadeIn .35s ease both;
+  }
+  @keyframes fadeIn{ from{ opacity:0; transform: translateY(8px);} to{ opacity:1; transform:none; } }
+  .hidden{ display:none !important; }
+
+  /* ============ DISCLAIMER ============ */
+  #view-disclaimer{ padding: 28px 22px; gap: 20px; }
+  .disclaimer-scroll{
+    flex:1; overflow-y:auto; padding-right:4px;
+  }
+  .disclaimer-scroll::-webkit-scrollbar{ width:4px; }
+  .disclaimer-scroll::-webkit-scrollbar-thumb{ background: var(--border); border-radius:4px; }
+  .disclaimer-block{
+    background: var(--surface); border:1px solid var(--border);
+    border-radius: var(--radius-md); padding:16px; margin-bottom:12px;
+  }
+  .disclaimer-block h4{ font-size:14px; margin-bottom:6px; font-weight:700; }
+  .disclaimer-block p{ font-size:14px; line-height:1.55; color: var(--text-secondary); }
+
+  .consent-row{
+    display:flex; align-items:flex-start; gap:12px;
+    background: var(--surface); border:1px solid var(--border);
+    border-radius: var(--radius-md); padding:16px; cursor:pointer;
+  }
+  .checkbox{
+    width:24px; height:24px; min-width:24px; border-radius:8px;
+    border:2px solid var(--border); display:flex; align-items:center; justify-content:center;
+    transition: all .15s ease; margin-top:1px;
+  }
+  .checkbox.checked{ background: var(--primary); border-color: var(--primary); }
+  .checkbox svg{ width:14px; height:14px; opacity:0; transition: opacity .12s ease; }
+  .checkbox.checked svg{ opacity:1; }
+
+  /* ============ SPLASH ============ */
+  #view-splash{
+    position: absolute; inset:0; z-index:100;
+    background: linear-gradient(160deg, var(--primary-strong), var(--primary));
+    display:flex; align-items:center; justify-content:center;
+    transition: opacity .5s ease;
+  }
+  #view-splash.fade-out{ opacity:0; pointer-events:none; }
+  .splash-logo-wrap{
+    position:absolute;
+    transition: top .7s cubic-bezier(.4,0,.2,1), transform .7s cubic-bezier(.4,0,.2,1);
+    top: 50%; left:50%; transform: translate(-50%,-50%) scale(1);
+  }
+  .splash-logo-wrap.to-top{
+    top: 64px; transform: translate(-50%,0) scale(0.21);
+  }
+  .splash-logo-wrap.to-top .logo-text{ filter: drop-shadow(0 0 0 transparent); }
+
+  /* ============ LOGO MARK ============ */
+  .logo-mark{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .logo-icon{ width:84px; height:84px; }
+  .logo-text{ font-size:26px; font-weight:800; letter-spacing:-0.02em; color:#fff; }
+  .logo-text.dark-variant{ color: var(--text); }
+  .logo-tagline{
+    font-size:19px; color: rgba(255,255,255,.85); margin-top:2px; font-weight:500;
+    text-align:center; line-height:1.5; max-width:320px;
+  }
+
+  /* ============ HOME SHELL ============ */
+  #view-home{ display:flex; flex-direction:column; }
+  .view-home-scroll{ flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; }
+  .topbar{
+    position: sticky; top:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 20px 14px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-brand{ display:flex; align-items:center; gap:10px; }
+  .topbar-brand .logo-icon{ width:34px; height:34px; }
+  .topbar-title{ font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+  .icon-btn{
+    width:38px; height:38px; border-radius: var(--radius-pill);
+    background: var(--surface-2); display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--border);
+  }
+  .icon-btn svg{ width:18px; height:18px; }
+
+  .tab-content{ flex:1; padding: 18px 20px 110px; display:flex; flex-direction:column; gap:14px; }
+
+  .page-title{ font-size:28px; font-weight:800; margin-bottom:2px; }
+  .page-subtitle{ font-size:14px; color: var(--text-secondary); margin-bottom:6px; }
+
+  /* Empty state */
+  .empty-state{
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    gap:14px; padding: 48px 24px; color: var(--text-secondary);
+  }
+  .empty-state .icon-circle{
+    width:64px; height:64px; border-radius:50%; background: var(--surface-2);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .empty-state .icon-circle svg{ width:28px; height:28px; color: var(--primary); }
+  .empty-state h3{ font-size:17px; color: var(--text); }
+  .empty-state p{ font-size:14px; line-height:1.5; max-width:280px; }
+
+  /* Company card */
+  .company-card{
+    display:flex; align-items:center; gap:14px; cursor:pointer;
+    transition: border-color .15s ease, transform .1s ease;
+  }
+  .company-card:active{ transform: scale(0.99); }
+  .company-card.active-company{ border-color: var(--primary); }
+  .company-avatar{
+    width:46px; height:46px; border-radius: var(--radius-sm);
+    background: var(--primary-soft); color: var(--primary);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:18px; flex-shrink:0;
+  }
+  .company-info{ flex:1; min-width:0; }
+  .company-name{ font-weight:700; font-size:15.5px; }
+  .company-meta{ font-size:13px; color: var(--text-secondary); margin-top:2px; }
+  .badge{
+    display:inline-flex; align-items:center; font-size:11.5px; font-weight:700;
+    padding:4px 9px; border-radius: var(--radius-pill);
+    background: var(--primary-soft); color: var(--primary);
+    margin-top:6px;
+  }
+  .badge.badge-amber{ background: var(--accent-soft); color: var(--accent); }
+  .chevron{ width:18px; height:18px; color: var(--text-secondary); flex-shrink:0; }
+
+  .fab-add{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    border:1.5px dashed var(--border); border-radius: var(--radius-lg);
+    padding:18px; color: var(--primary); font-weight:700; font-size:14.5px;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .fab-add:active{ background: var(--primary-soft); }
+  .fab-add.locked{ color: var(--text-secondary); border-color: var(--border); }
+
+  /* Botão circular apenas com ícone (+) — lançar novo colaborador */
+  .icon-add-wrap{ display:flex; justify-content:center; padding: 6px 0; }
+  .icon-add-circle{
+    width:56px; height:56px; border-radius:50%;
+    background: linear-gradient(160deg, var(--primary), var(--primary-strong));
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    box-shadow: var(--shadow); transition: transform .15s ease;
+  }
+  .icon-add-circle:active{ transform: scale(0.93); }
+  .icon-add-circle svg{ width:26px; height:26px; }
+
+  .premium-banner{
+    display:flex; align-items:center; gap:12px;
+    background: linear-gradient(135deg, var(--accent-soft), transparent);
+    border:1px solid var(--border); border-radius: var(--radius-lg); padding:16px;
+  }
+  .premium-banner .icon-circle{
+    width:40px; height:40px; border-radius:50%; background: var(--accent-soft);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .premium-banner .icon-circle svg{ width:20px; height:20px; color: var(--accent); }
+  .premium-banner strong{ font-size:14px; display:block; }
+  .premium-banner span{ font-size:12.5px; color: var(--text-secondary); }
+
+  /* ============ BOTTOM NAV ============ */
+  .bottom-nav{
+    position: absolute; left:0; right:0;
+    bottom:0; width:100%;
+    display:flex; justify-content:space-around; align-items:center;
+    padding: 8px 6px calc(10px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    z-index:30;
+  }
+  .nav-item{
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    color: var(--text-secondary); font-size:11px; font-weight:600;
+    padding:6px 10px; border-radius: 14px; flex:1; max-width:80px;
+    transition: color .15s ease;
+  }
+  .nav-item svg{ width:23px; height:23px; transition: transform .15s ease; }
+  .nav-item.active{ color: var(--primary); }
+  .nav-item.active svg{ transform: translateY(-1px) scale(1.05); }
+
+  /* Toast */
+  .toast{
+    position: absolute; bottom: 96px; left:50%; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg);
+    padding: 12px 20px; border-radius: var(--radius-pill);
+    font-size:13.5px; font-weight:600; box-shadow: var(--shadow);
+    opacity:0; transition: all .25s ease; z-index:50; pointer-events:none;
+    max-width: 90%; text-align:center;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+  /* ============ PILL BADGE (Free / Premium) ============ */
+  .pill-badge{
+    font-size:11px; font-weight:800; padding:5px 11px; border-radius: var(--radius-pill);
+    background: var(--surface-2); color: var(--text-secondary); border:1px solid var(--border);
+    letter-spacing:.04em; text-transform:uppercase;
+  }
+  .pill-badge.premium{ background: var(--accent-soft); color: var(--accent); }
+
+  /* ============ BOTTOM NAV — FAB CENTRAL ============ */
+  .nav-item.fab{ position: relative; color: var(--text-secondary); }
+  .nav-item.fab .fab-circle{
+    width:54px; height:54px; border-radius:50%;
+    background: linear-gradient(160deg, var(--primary), var(--primary-strong));
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    margin-top:-30px; box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+    border: 4px solid var(--surface);
+    transition: transform .15s ease;
+  }
+  .nav-item.fab svg{ width:24px; height:24px; }
+  .nav-item.fab.active{ color: var(--primary); }
+  .nav-item.fab:active .fab-circle{ transform: scale(0.93); }
+
+  /* ============ HERO CARD (verde da marca) ============ */
+  .hero-card{
+    background: linear-gradient(160deg, var(--primary), var(--primary-strong));
+    color:#fff; border-radius: var(--radius-lg); padding: 22px;
+    box-shadow: var(--shadow); position:relative; overflow:hidden;
+  }
+  .hero-card .label-eyebrow{ color: rgba(255,255,255,0.6); }
+  .hero-card .hero-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+  .hero-card .hero-value{ font-size: 32px; font-weight:800; letter-spacing:-0.02em; margin-top:4px; line-height:1.1; }
+  .hero-card .hero-sub{ font-size:12.5px; color: rgba(255,255,255,0.65); margin-top:3px; }
+  .hero-divider{ height:1px; background: rgba(255,255,255,0.14); margin: 16px 0; }
+  .hero-logo-negative{
+    position:absolute; top:20px; right:20px; font-weight:800; font-size:13px;
+    color: rgba(255,255,255,0.45); letter-spacing:-0.01em;
+  }
+  .indice-box{
+    display:flex; align-items:center; gap:12px;
+    background: rgba(255,255,255,0.12); border-radius: var(--radius-md);
+    padding: 14px 16px; margin-top: 14px;
+  }
+  .indice-stat{ display:flex; flex-direction:column; gap:3px; flex:1; min-width:0; }
+  .indice-stat.right{ align-items:flex-end; text-align:right; }
+  .indice-value{ font-size:19px; font-weight:800; letter-spacing:-0.02em; color:#fff; }
+  .indice-caption{ font-size:11px; color: rgba(255,255,255,0.65); line-height:1.3; }
+  .indice-arrow{ flex-shrink:0; color: rgba(255,255,255,0.45); }
+  .indice-arrow svg{ width:18px; height:18px; display:block; }
+
+  /* ============ DONUT CHART ============ */
+  .donut-wrap{ display:flex; flex-direction:column; align-items:center; gap:18px; }
+  .donut{
+    width:168px; height:168px; position:relative; flex-shrink:0;
+  }
+  .donut svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .donut-slice-label{ font-size:11px; font-weight:800; fill: var(--text); }
+  .donut-slice-label-bg{ fill: var(--surface); }
+  .donut-center{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; gap:2px;
+    z-index:1; pointer-events:none;
+  }
+  .donut-center .donut-pct{ font-size:24px; font-weight:800; letter-spacing:-0.02em; }
+  .donut-center .donut-label{ font-size:11px; color: var(--text-secondary); font-weight:600; max-width:90px; line-height:1.3; }
+
+  .legend{ display:flex; flex-direction:column; gap:11px; width:100%; }
+  .legend-item{ display:flex; align-items:center; justify-content:space-between; font-size:13.5px; gap:10px; }
+  .legend-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .legend-dot{ width:11px; height:11px; border-radius:4px; flex-shrink:0; }
+  .legend-name{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .legend-value{ font-weight:700; flex-shrink:0; }
+  .legend-percent{ font-size:11px; color: var(--text-secondary); font-weight:600; }
+
+  /* ============ FORM EXTRAS ============ */
+  .toggle-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .toggle-row:last-child{ border-bottom:none; }
+  .toggle-row-text{ font-size:14.5px; font-weight:600; }
+  .toggle-row-hint{ font-size:12px; color: var(--text-secondary); margin-top:2px; }
+  .switch{
+    width:46px; height:28px; border-radius: var(--radius-pill); background: var(--surface-2);
+    border:1px solid var(--border); position:relative; transition: background .2s ease; flex-shrink:0;
+  }
+  .switch::after{
+    content:''; position:absolute; top:2px; left:2px; width:22px; height:22px;
+    border-radius:50%; background:#fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: transform .2s ease;
+  }
+  .switch.on{ background: var(--primary); border-color: var(--primary); }
+  .switch.on::after{ transform: translateX(18px); }
+  .benefit-amount{ margin-top:10px; }
+
+  /* ============ EMPLOYEE CARD ============ */
+  .employee-card{ cursor:pointer; transition: transform .1s ease; display:flex; flex-direction:column; gap:0; }
+  .employee-card:active{ transform: scale(0.99); }
+  .employee-card-main{ display:flex; align-items:center; gap:14px; cursor:pointer; }
+  .employee-info{ flex:1; min-width:0; }
+  .employee-name{ font-weight:700; font-size:15.5px; }
+  .employee-meta{ font-size:12.5px; color: var(--text-secondary); margin-top:2px; }
+  .employee-cost{ font-weight:800; font-size:16px; color: var(--primary); white-space:nowrap; }
+  .employee-cost-label{ font-size:11px; color: var(--text-secondary); text-align:right; }
+  .employee-card-actions{
+    display:flex; gap:8px; justify-content:flex-end;
+    margin-top:12px; padding-top:12px; border-top: 1px solid var(--border);
+  }
+  .card-action-btn{
+    display:flex; align-items:center; gap:6px; padding:7px 14px;
+    border-radius: var(--radius-pill); background: var(--surface-2);
+    border:1px solid var(--border); font-size:12.5px; font-weight:700;
+    color: var(--text-secondary); transition: all .15s ease;
+  }
+  .card-action-btn:active{ transform: scale(0.96); }
+  .card-action-btn.danger{ color: var(--danger); }
+  .card-action-btn svg{ width:14px; height:14px; }
+
+  /* ============ RESULT OVERLAY ============ */
+  #view-result{
+    position: absolute; inset:0; z-index:60; background: var(--bg);
+    display:flex; flex-direction:column;
+    transform: translateY(100%);
+    transition: transform .35s cubic-bezier(.4,0,.2,1);
+  }
+  #view-result.show{ transform: translateY(0); }
+  .result-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink:0;
+  }
+  .result-body{ flex:1; overflow-y:auto; padding: 18px 20px 40px; display:flex; flex-direction:column; gap:16px; }
+
+  /* ============ SELETOR DE EMPRESA ============ */
+  .company-switcher{
+    display:flex; gap:8px; padding: 12px 20px;
+    overflow-x:auto; -ms-overflow-style:none; scrollbar-width:none;
+    border-bottom: 1px solid var(--border); background: var(--bg);
+  }
+  .company-switcher::-webkit-scrollbar{ display:none; }
+  .switcher-pill{
+    flex-shrink:0; padding:8px 16px; border-radius: var(--radius-pill);
+    background: var(--surface-2); border:1px solid var(--border);
+    font-size:13px; font-weight:700; color: var(--text-secondary);
+    white-space:nowrap; transition: all .15s ease;
+  }
+  .switcher-pill.active{ background: var(--primary); color:#fff; border-color: var(--primary); }
+  .switcher-pill:active{ transform: scale(0.96); }
+
+  /* ============ CONSOLIDADO — cards de empresa ============ */
+  .company-summary-row{ display:flex; align-items:center; gap:14px; cursor:pointer; transition: transform .1s ease; }
+  .company-summary-row:active{ transform: scale(0.99); }
+  .report-section-title{
+    display:flex; align-items:center; justify-content:space-between;
+    margin: 18px 0 6px;
+  }
+  .report-section-title:first-child{ margin-top:0; }
+
+  /* ============ DASHBOARD STATS ============ */
+  .stat-grid{ display:grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap:12px; }
+  .stat-box{ display:flex; flex-direction:column; justify-content:space-between; gap:8px; min-height:84px; }
+  .stat-box .stat-value{ font-size:21px; font-weight:800; letter-spacing:-0.02em; }
+  .stat-box .stat-label{ font-size:12px; color: var(--text-secondary); font-weight:600; line-height:1.35; }
+
+  /* ============ RELATÓRIOS ============ */
+  .report-row{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px; padding:12px 0; border-bottom:1px solid var(--border);
+  }
+  .report-row:last-child{ border-bottom:none; }
+  .report-row-name{ font-weight:700; font-size:14.5px; }
+  .report-row-meta{ font-size:12px; color: var(--text-secondary); margin-top:2px; }
+  .report-row-value{ font-weight:800; font-size:15px; text-align:right; white-space:nowrap; }
+  .report-letterhead{ display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .report-letterhead .rl-name{ font-size:16px; font-weight:800; }
+  .report-letterhead .rl-meta{ font-size:12px; color: var(--text-secondary); }
+  .report-totals{ border-top: 2px solid var(--border); margin-top:8px; padding-top:12px; }
+
+  /* ============ SHEET DE COMPARTILHAMENTO ============ */
+  .share-overlay{
+    position: absolute; inset:0; z-index:80;
+    background: rgba(0,0,0,0.32);
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none; transition: opacity .25s ease;
+  }
+  .share-overlay.show{ opacity:1; pointer-events:auto; }
+  .share-sheet{
+    width:100%; background: var(--surface);
+    border-radius: 24px 24px 0 0; padding: 22px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.18);
+    transform: translateY(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+    display:flex; flex-direction:column; gap:16px;
+  }
+  .share-overlay.show .share-sheet{ transform: translateY(0); }
+  .share-sheet-header{ display:flex; align-items:center; gap:12px; }
+  .share-sheet-icon{
+    width:42px; height:42px; border-radius:50%; background: var(--primary-soft);
+    color: var(--primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .share-sheet-icon svg{ width:22px; height:22px; }
+  .share-sheet-title{ font-weight:800; font-size:15.5px; }
+  .share-sheet-sub{ font-size:12.5px; color: var(--text-secondary); margin-top:2px; }
+  .share-options{ display:flex; flex-direction:column; gap:8px; }
+  .share-option{
+    display:flex; align-items:center; gap:12px; padding:13px 14px;
+    border-radius: var(--radius-md); background: var(--surface-2);
+    border:1px solid var(--border); font-weight:700; font-size:14px;
+    transition: background .15s ease;
+  }
+  .share-option:active{ background: var(--primary-soft); }
+  .share-option svg{ width:20px; height:20px; flex-shrink:0; }
+  .share-option.whatsapp svg{ color:#25D366; }
+  .share-option.email svg{ color: var(--primary); }
+
+  @media print{
+    @page{ size: A4; margin: 16mm; }
+    body *{ visibility: hidden; }
+    #print-area, #print-area *{ visibility: visible; }
+    #app{ overflow: visible !important; height: auto !important; }
+    #print-area{
+      position: absolute; top:0; left:0; width:100%;
+      background:#fff !important; color:#1D1D1F !important; padding:0;
+    }
+    #print-area .card{ box-shadow:none !important; border:1px solid #ddd !important; background:#fff !important; color:#1D1D1F !important; }
+    #print-area .hero-card{ background:#2F4F4F !important; color:#fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .bottom-nav, .topbar, .company-switcher, #btn-print-report{ display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===================== DISCLAIMER + CONSENTIMENTO ===================== -->
+  <section id="view-disclaimer" class="view">
+    <div>
+      <div class="logo-mark" style="align-items:flex-start; margin-bottom:18px;">
+        <svg class="logo-icon" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="120" rx="28" fill="var(--primary)"/>
+          <text x="60" y="82" font-family="Inter, sans-serif" font-weight="800" font-size="64" fill="#fff" text-anchor="middle">Q</text>
+        </svg>
+      </div>
+      <h2 style="font-size:24px;">Antes de começar</h2>
+      <p class="text-secondary" style="font-size:14px; margin-top:6px;">Leia as informações abaixo com atenção.</p>
+    </div>
+
+    <div class="disclaimer-scroll" style="margin-top:18px;">
+      <div class="disclaimer-block">
+        <h4>O que é o QFolha</h4>
+        <p>O QFolha é uma ferramenta que ajuda micro e pequenas empresas a estimar o custo real de um funcionário — salário, encargos e benefícios — de forma rápida e visual.</p>
+      </div>
+      <div class="disclaimer-block">
+        <h4>Estimativas, não cálculo oficial</h4>
+        <p>Os valores apresentados são aproximações baseadas nas alíquotas vigentes e nas informações que você inserir. Eles não substituem o cálculo oficial da folha de pagamento, que deve ser realizado por um contador habilitado.</p>
+      </div>
+      <div class="disclaimer-block">
+        <h4>Apoio à decisão, não substituição do contador</h4>
+        <p>Use o QFolha para consultas rápidas antes de uma contratação ou negociação. Decisões fiscais e trabalhistas devem sempre ser validadas com um profissional de contabilidade.</p>
+      </div>
+      <div class="disclaimer-block">
+        <h4>Privacidade</h4>
+        <p>Os dados que você cadastra permanecem neste dispositivo e não são compartilhados com terceiros.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; display:flex; flex-direction:column; gap:14px;">
+      <div class="consent-row" id="consent-row">
+        <div class="checkbox" id="consent-checkbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <p style="font-size:13.5px; line-height:1.5;">Li e concordo com as informações acima e entendo que o QFolha é uma ferramenta de apoio à gestão, não um substituto da contabilidade.</p>
+      </div>
+      <button class="btn btn-primary" id="btn-continue" disabled>Continuar</button>
+    </div>
+  </section>
+
+  <!-- ===================== HOME (oculto até o consentimento) ===================== -->
+  <section id="view-home" class="view hidden">
+    <div class="view-home-scroll">
+
+    <header class="topbar">
+      <div class="topbar-brand">
+        <svg class="logo-icon" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="120" rx="28" fill="var(--primary)"/>
+          <text x="60" y="82" font-family="Inter, sans-serif" font-weight="800" font-size="64" fill="#fff" text-anchor="middle">Q</text>
+        </svg>
+        <span class="topbar-title">QFolha</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="pill-badge hidden" id="plan-badge">Free</span>
+        <button class="icon-btn" id="btn-theme-toggle" title="Alternar tema">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="theme-icon">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ---------- SELETOR DE EMPRESA (visível em todas as telas) ---------- -->
+    <div class="company-switcher hidden" id="company-switcher"></div>
+
+    <!-- ---------- TAB: EMPRESAS ---------- -->
+    <div class="tab-content" data-tab-content="empresas">
+      <div>
+        <h1 class="page-title">Empresas</h1>
+        <p class="page-subtitle">Cadastre sua empresa para começar.</p>
+      </div>
+
+      <div id="company-list"></div>
+
+      <div id="company-form-wrap" class="hidden"></div>
+
+      <div id="company-add-zone"></div>
+
+      <div class="premium-banner hidden" id="premium-banner-empresas">
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.5 6.5L21 9l-5 4.5L17.5 21 12 17l-5.5 4L8 13.5 3 9l6.5-.5z"/></svg>
+        </div>
+        <div>
+          <strong>Plano Premium</strong>
+          <span>Cadastre empresas ilimitadas e libere relatórios completos.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- TAB: DADOS (Informações) ---------- -->
+    <div class="tab-content hidden" data-tab-content="dados">
+      <div>
+        <h1 class="page-title">Dados da empresa</h1>
+        <p class="page-subtitle">Essas informações definem como os encargos serão calculados.</p>
+      </div>
+      <div id="dados-content"></div>
+    </div>
+
+    <!-- ---------- TAB: FUNCIONÁRIOS ---------- -->
+    <div class="tab-content hidden" data-tab-content="funcionarios">
+      <div>
+        <h1 class="page-title">Equipe</h1>
+        <p class="page-subtitle">Escolha a empresa e simule o custo de cada colaborador.</p>
+      </div>
+
+      <div id="equipe-company-list"></div>
+
+      <div id="employee-list"></div>
+
+      <div id="employee-form-wrap" class="hidden">
+        <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+          <span class="label-eyebrow" id="emp-form-title">Novo colaborador</span>
+          <div>
+            <label class="field-label">Nome do colaborador</label>
+            <input class="field-input" id="input-emp-nome" type="text" placeholder="Ex: Maria Silva" />
+          </div>
+          <div>
+            <label class="field-label">Cargo</label>
+            <input class="field-input" id="input-emp-cargo" type="text" placeholder="Ex: Vendedor(a)" />
+          </div>
+          <div>
+            <label class="field-label">Salário bruto mensal (R$)</label>
+            <input class="field-input" id="input-emp-bruto" type="number" inputmode="decimal" placeholder="Ex: 2000" />
+          </div>
+
+          <div>
+            <span class="label-eyebrow">Benefícios</span>
+            <div style="margin-top:8px;">
+              <div class="toggle-row" data-benefit="vt">
+                <div>
+                  <div class="toggle-row-text">Vale-transporte</div>
+                  <div class="toggle-row-hint">Desconto de até 6% do salário do colaborador</div>
+                </div>
+                <div class="switch" data-switch="vt"></div>
+              </div>
+              <div class="benefit-amount hidden" data-amount="vt">
+                <input class="field-input" id="input-emp-vt" type="number" inputmode="decimal" placeholder="Valor mensal do VT (R$)" />
+              </div>
+
+              <div class="toggle-row" data-benefit="vr">
+                <div>
+                  <div class="toggle-row-text">Vale-refeição / alimentação</div>
+                  <div class="toggle-row-hint">Custo mensal pago pela empresa</div>
+                </div>
+                <div class="switch" data-switch="vr"></div>
+              </div>
+              <div class="benefit-amount hidden" data-amount="vr">
+                <input class="field-input" id="input-emp-vr" type="number" inputmode="decimal" placeholder="Valor mensal de VR/VA (R$)" />
+              </div>
+
+              <div class="toggle-row" data-benefit="saude">
+                <div>
+                  <div class="toggle-row-text">Plano de saúde</div>
+                  <div class="toggle-row-hint">Custo mensal pago pela empresa</div>
+                </div>
+                <div class="switch" data-switch="saude"></div>
+              </div>
+              <div class="benefit-amount hidden" data-amount="saude">
+                <input class="field-input" id="input-emp-saude" type="number" inputmode="decimal" placeholder="Valor mensal do plano (R$)" />
+              </div>
+
+              <div class="toggle-row" data-benefit="outros">
+                <div>
+                  <div class="toggle-row-text">Outros benefícios</div>
+                  <div class="toggle-row-hint">Qualquer outro custo mensal recorrente</div>
+                </div>
+                <div class="switch" data-switch="outros"></div>
+              </div>
+              <div class="benefit-amount hidden" data-amount="outros">
+                <input class="field-input" id="input-emp-outros" type="number" inputmode="decimal" placeholder="Valor mensal (R$)" />
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-secondary" id="btn-cancel-emp" style="flex:1;">Cancelar</button>
+            <button class="btn btn-primary" id="btn-calc-emp" style="flex:2;">Calcular custo real</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ---------- TAB: DASHBOARD ---------- -->
+    <div class="tab-content hidden" data-tab-content="dashboard">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Visão consolidada da sua folha.</p>
+      </div>
+      <div id="dashboard-content"></div>
+    </div>
+
+    <!-- ---------- TAB: RELATÓRIOS ---------- -->
+    <div class="tab-content hidden" data-tab-content="relatorios">
+      <div>
+        <h1 class="page-title">Relatórios</h1>
+        <p class="page-subtitle">Exporte um resumo para sua equipe ou contador.</p>
+      </div>
+      <div id="relatorios-content"></div>
+    </div>
+
+    <!-- ---------- BOTTOM NAV ---------- -->
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="empresas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+        Empresas
+      </button>
+      <button class="nav-item" data-tab="dados">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        Dados
+      </button>
+      <button class="nav-item fab" data-tab="funcionarios">
+        <div class="fab-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </div>
+        Equipe
+      </button>
+      <button class="nav-item" data-tab="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-tab="relatorios">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        Relatórios
+      </button>
+    </nav>
+  </section>
+
+  <!-- ===================== RESULTADO (overlay) ===================== -->
+  <section id="view-result">
+    <div class="result-header">
+      <h2 style="font-size:18px;">Custo real do colaborador</h2>
+      <button class="icon-btn" id="btn-close-result">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="result-body" id="result-body"></div>
+  </section>
+
+  <!-- ===================== SPLASH ===================== -->
+  <section id="view-splash" class="hidden">
+    <div class="splash-logo-wrap" id="splash-logo">
+      <div class="logo-mark" style="gap:24px;">
+        <div class="logo-text" style="font-size:88px;">QFolha</div>
+        <div class="logo-tagline" id="splash-tagline">O custo real<br>da sua equipe, sem complicação.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Sheet de compartilhamento do relatório (PDF / WhatsApp / E-mail) -->
+  <div class="share-overlay" id="share-overlay">
+    <div class="share-sheet">
+      <div class="share-sheet-header">
+        <div class="share-sheet-icon" id="share-sheet-icon"></div>
+        <div>
+          <div class="share-sheet-title">PDF gerado com sucesso</div>
+          <div class="share-sheet-sub">Formato A4 — escolha uma forma de compartilhar</div>
+        </div>
+      </div>
+      <div class="share-options">
+        <button class="share-option whatsapp" id="share-whatsapp"></button>
+        <button class="share-option email" id="share-email"></button>
+        <button class="share-option" id="share-cancel"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     STATE
+     ============================================================ */
+  const state = {
+    isPremium: true, // monetização desativada temporariamente para testes
+    activeCompanyId: null,
+    currentTab: 'empresas',
+    dashboardScope: 'consolidado', // 'consolidado' (todas as empresas) ou 'empresa' (ativa)
+    companies: [] // { id, nome, endereco, regime: 'simples' | 'presumido', funcionarios: [] }
+  };
+
+  // Funcionário: { id, nome, bruto, beneficios: { vt:{on,valor}, vr:{on,valor}, saude:{on,valor}, outros:{on,valor} } }
+
+  const FREE_COMPANY_LIMIT = 1;
+
+  /* ============================================================
+     ELEMENT REFS
+     ============================================================ */
+  const viewDisclaimer = document.getElementById('view-disclaimer');
+  const viewHome = document.getElementById('view-home');
+  const viewSplash = document.getElementById('view-splash');
+  const splashLogo = document.getElementById('splash-logo');
+  const consentRow = document.getElementById('consent-row');
+  const consentCheckbox = document.getElementById('consent-checkbox');
+  const btnContinue = document.getElementById('btn-continue');
+  const btnThemeToggle = document.getElementById('btn-theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  const toastEl = document.getElementById('toast');
+
+  /* ============================================================
+     TOAST
+     ============================================================ */
+  let toastTimer;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> toastEl.classList.remove('show'), 2200);
+  }
+
+  /* ============================================================
+     THEME TOGGLE (light / dark)
+     ============================================================ */
+  const ICON_SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  const ICON_MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    themeIcon.innerHTML = theme === 'dark' ? ICON_MOON : ICON_SUN;
+  }
+  // Start aligned with system preference, but explicit + toggleable.
+  applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+  btnThemeToggle.addEventListener('click', ()=>{
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+
+  /* ============================================================
+     DISCLAIMER + CONSENT
+     ============================================================ */
+  let consentChecked = false;
+  consentRow.addEventListener('click', ()=>{
+    consentChecked = !consentChecked;
+    consentCheckbox.classList.toggle('checked', consentChecked);
+    btnContinue.disabled = !consentChecked;
+  });
+
+  btnContinue.addEventListener('click', ()=>{
+    viewDisclaimer.classList.add('hidden');
+    startSplash();
+  });
+
+  /* ============================================================
+     SPLASH SEQUENCE
+     ============================================================ */
+  function startSplash(){
+    viewSplash.classList.remove('hidden');
+    // Reveal home underneath (it will be exposed once splash fades).
+    viewHome.classList.remove('hidden');
+    renderAll();
+
+    setTimeout(()=>{
+      splashLogo.classList.add('to-top');
+      const tagline = document.getElementById('splash-tagline');
+      if (tagline) tagline.style.display = 'none';
+    }, 1400);
+
+    setTimeout(()=>{
+      viewSplash.classList.add('fade-out');
+    }, 2600);
+
+    setTimeout(()=>{
+      viewSplash.classList.add('hidden');
+    }, 3200);
+  }
+
+  /* ============================================================
+     TAB NAVIGATION
+     ============================================================ */
+  const navItems = document.querySelectorAll('.nav-item');
+  const tabContents = document.querySelectorAll('[data-tab-content]');
+
+  navItems.forEach(item=>{
+    item.addEventListener('click', ()=>{
+      switchTab(item.dataset.tab);
+      // O botão central (Equipe) também já abre o formulário de novo colaborador.
+      if (item.dataset.tab === 'funcionarios'){
+        const company = state.companies.find(c=> c.id === state.activeCompanyId);
+        if (company){
+          openEmployeeForm(company);
+        } else {
+          showToast('Cadastre uma empresa antes de adicionar colaboradores');
+        }
+      }
+    });
+  });
+
+  function switchTab(tabName){
+    state.currentTab = tabName;
+    navItems.forEach(i=> i.classList.toggle('active', i.dataset.tab === tabName));
+    tabContents.forEach(c=> c.classList.toggle('hidden', c.dataset.tabContent !== tabName));
+    renderCompanySwitcher();
+    renderCurrentTab();
+  }
+
+  function renderCurrentTab(){
+    switch(state.currentTab){
+      case 'empresas': renderEmpresasTab(); break;
+      case 'dados': renderDadosTab(); break;
+      case 'funcionarios': renderFuncionariosTab(); break;
+      case 'dashboard': renderDashboardTab(); break;
+      case 'relatorios': renderRelatoriosTab(); break;
+    }
+  }
+
+  /* ============================================================
+     SELETOR DE EMPRESA (visível em todas as telas)
+     Nas abas Dashboard e Relatórios, permite alternar entre
+     visão "Consolidado" (todas as empresas) e uma empresa específica.
+     ============================================================ */
+  const companySwitcherEl = document.getElementById('company-switcher');
+
+  // Garante que sempre haja uma empresa ativa quando existir ao menos uma cadastrada.
+  function ensureActiveCompany(){
+    if (!state.activeCompanyId && state.companies.length > 0){
+      state.activeCompanyId = state.companies[0].id;
+    }
+  }
+
+  function renderCompanySwitcher(){
+    ensureActiveCompany();
+    // Nas abas Empresas e Equipe já existem boxes próprios de empresa — evita redundância.
+    if (state.companies.length === 0 || state.currentTab === 'empresas' || state.currentTab === 'funcionarios'){
+      companySwitcherEl.classList.add('hidden');
+      companySwitcherEl.innerHTML = '';
+      return;
+    }
+    companySwitcherEl.classList.remove('hidden');
+
+    const isConsolidavel = (state.currentTab === 'dashboard' || state.currentTab === 'relatorios');
+    const showConsolidado = isConsolidavel && state.companies.length > 1;
+
+    let html = '';
+    if (showConsolidado){
+      html += `<button class="switcher-pill ${state.dashboardScope === 'consolidado' ? 'active' : ''}" data-scope="consolidado">Consolidado</button>`;
+    }
+    state.companies.forEach(c=>{
+      const isActive = showConsolidado
+        ? (state.dashboardScope === 'empresa' && c.id === state.activeCompanyId)
+        : (c.id === state.activeCompanyId);
+      html += `<button class="switcher-pill ${isActive ? 'active' : ''}" data-company="${c.id}">${escapeHtml(c.nome || 'Empresa sem nome')}</button>`;
+    });
+    companySwitcherEl.innerHTML = html;
+
+    companySwitcherEl.querySelectorAll('[data-scope]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.dashboardScope = 'consolidado';
+        renderCompanySwitcher();
+        renderCurrentTab();
+      });
+    });
+    companySwitcherEl.querySelectorAll('[data-company]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.activeCompanyId = btn.dataset.company;
+        if (isConsolidavel) state.dashboardScope = 'empresa';
+        renderCompanySwitcher();
+        renderCurrentTab();
+      });
+    });
+  }
+
+  /* ============================================================
+     ICONS (reused in JS-rendered markup)
+     ============================================================ */
+  const ICON_CHEVRON = '<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+  const ICON_BUILDING = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>';
+  const ICON_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+  const ICON_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 5v14M5 12h14"/></svg>';
+  const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  const ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+
+  /* ============================================================
+     RENDER: TAB "EMPRESAS"
+     ============================================================ */
+  const companyListEl = document.getElementById('company-list');
+  const companyAddZoneEl = document.getElementById('company-add-zone');
+  const premiumBannerEmpresas = document.getElementById('premium-banner-empresas');
+
+  function regimeLabel(regime){
+    return regime === 'presumido' ? 'Lucro Presumido / Real' : 'Simples Nacional';
+  }
+
+  function initials(name){
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+  }
+
+  const companyFormWrapEl = document.getElementById('company-form-wrap');
+
+  function renderEmpresasTab(){
+    companyListEl.innerHTML = '';
+    companyFormWrapEl.classList.add('hidden');
+    companyFormWrapEl.innerHTML = '';
+    renderCompanySwitcher();
+
+    if (state.companies.length === 0){
+      companyListEl.innerHTML = `
+        <div class="empty-state" style="padding-top:24px;">
+          <div class="icon-circle">${ICON_BUILDING}</div>
+          <h3>Nenhuma empresa cadastrada</h3>
+          <p>Cadastre sua empresa para definir o regime tributário e começar a calcular custos.</p>
+        </div>`;
+    } else {
+      state.companies.forEach(company=>{
+        const card = document.createElement('div');
+        card.className = 'card company-card' + (company.id === state.activeCompanyId ? ' active-company' : '');
+        card.innerHTML = `
+          <div class="company-avatar">${initials(company.nome)}</div>
+          <div class="company-info">
+            <div class="company-name">${escapeHtml(company.nome || 'Empresa sem nome')}</div>
+            <div class="company-meta">${escapeHtml(company.endereco || 'Endereço não informado')}</div>
+            <span class="badge">${regimeLabel(company.regime)}</span>
+            ${company.id === state.activeCompanyId ? '<span class="badge" style="margin-left:6px;">Ativa</span>' : ''}
+          </div>
+          ${ICON_CHEVRON}
+        `;
+        card.addEventListener('click', ()=>{
+          state.activeCompanyId = company.id;
+          renderEmpresasTab();
+          openCompanyForm(company, false);
+          showToast(`Editando "${company.nome || 'Empresa'}"`);
+        });
+        companyListEl.appendChild(card);
+      });
+    }
+
+    // Add company zone (respects free tier limit)
+    companyAddZoneEl.innerHTML = '';
+    const atLimit = !state.isPremium && state.companies.length >= FREE_COMPANY_LIMIT;
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'fab-add' + (atLimit ? ' locked' : '');
+    addBtn.innerHTML = atLimit
+      ? `${ICON_LOCK} Limite do plano gratuito atingido (1 empresa)`
+      : `${ICON_PLUS} Cadastrar nova empresa`;
+    addBtn.addEventListener('click', ()=>{
+      if (atLimit){
+        showToast('Plano gratuito permite apenas 1 empresa');
+        return;
+      }
+      const draft = { id: 'c_' + Date.now(), nome:'', cnpj:'', endereco:'', gerenteNome:'', gerenteTelefone:'', regime:'simples', funcionarios:[] };
+      openCompanyForm(draft, true);
+    });
+    companyAddZoneEl.appendChild(addBtn);
+
+    premiumBannerEmpresas.classList.toggle('hidden', !atLimit);
+  }
+
+  /* ----------------------------------------------------------
+     Formulário inline de empresa (cadastro completo numa tela só)
+     Campos: nome, CNPJ, endereço, regime, nome e telefone do
+     responsável/gerente — todos opcionais, editáveis depois.
+     ---------------------------------------------------------- */
+  function openCompanyForm(company, isNew){
+    companyAddZoneEl.innerHTML = '';
+    companyFormWrapEl.classList.remove('hidden');
+
+    companyFormWrapEl.innerHTML = `
+      <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+        <span class="label-eyebrow">${isNew ? 'Nova empresa' : 'Editar empresa'}</span>
+        <div>
+          <label class="field-label">Nome da empresa</label>
+          <input class="field-input" id="cf-nome" type="text" placeholder="Ex: Loja da Maria" value="${escapeHtml(company.nome)}" />
+        </div>
+        <div>
+          <label class="field-label">CNPJ</label>
+          <input class="field-input" id="cf-cnpj" type="text" inputmode="numeric" placeholder="00.000.000/0000-00" value="${escapeHtml(company.cnpj || '')}" />
+        </div>
+        <div>
+          <label class="field-label">Endereço</label>
+          <input class="field-input" id="cf-endereco" type="text" placeholder="Ex: Rua das Flores, 123 — Joinville/SC" value="${escapeHtml(company.endereco)}" />
+        </div>
+        <div>
+          <label class="field-label">Nome do(a) gerente/responsável</label>
+          <input class="field-input" id="cf-gerente-nome" type="text" placeholder="Ex: Maria Silva" value="${escapeHtml(company.gerenteNome || '')}" />
+        </div>
+        <div>
+          <label class="field-label">Telefone do(a) gerente/responsável</label>
+          <input class="field-input" id="cf-gerente-tel" type="tel" inputmode="tel" placeholder="(00) 00000-0000" value="${escapeHtml(company.gerenteTelefone || '')}" />
+        </div>
+        <div>
+          <label class="field-label">Regime tributário</label>
+          <div class="segmented" id="cf-regime">
+            <button data-regime="simples" class="${company.regime === 'simples' ? 'active' : ''}">Simples Nacional</button>
+            <button data-regime="presumido" class="${company.regime === 'presumido' ? 'active' : ''}">Lucro Presumido / Real</button>
+          </div>
+          <p class="text-secondary" id="cf-regime-hint" style="font-size:12.5px; margin-top:8px; line-height:1.45;">
+            ${company.regime === 'presumido'
+              ? 'No Lucro Presumido/Real, o custo do funcionário inclui CPP (INSS Patronal) e RAT/Sistema S sobre a folha.'
+              : 'No Simples Nacional, esses encargos já estão embutidos no DAS — por isso o custo direto sobre a folha tende a ser menor.'}
+          </p>
+        </div>
+        <p class="text-secondary" style="font-size:12px;">Nenhum campo é obrigatório — preencha o que quiser agora e edite depois.</p>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-secondary" id="cf-cancel" style="flex:1;">Cancelar</button>
+          <button class="btn btn-primary" id="cf-save" style="flex:2;">Salvar empresa</button>
+        </div>
+      </div>
+    `;
+
+    let regime = company.regime || 'simples';
+    const segmented = document.getElementById('cf-regime');
+    const regimeHint = document.getElementById('cf-regime-hint');
+    segmented.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        regime = btn.dataset.regime;
+        segmented.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b === btn));
+        regimeHint.textContent = regime === 'presumido'
+          ? 'No Lucro Presumido/Real, o custo do funcionário inclui CPP (INSS Patronal) e RAT/Sistema S sobre a folha.'
+          : 'No Simples Nacional, esses encargos já estão embutidos no DAS — por isso o custo direto sobre a folha tende a ser menor.';
+      });
+    });
+
+    document.getElementById('cf-cancel').addEventListener('click', ()=>{
+      renderEmpresasTab();
+    });
+
+    document.getElementById('cf-save').addEventListener('click', ()=>{
+      company.nome = document.getElementById('cf-nome').value.trim();
+      company.cnpj = document.getElementById('cf-cnpj').value.trim();
+      company.endereco = document.getElementById('cf-endereco').value.trim();
+      company.gerenteNome = document.getElementById('cf-gerente-nome').value.trim();
+      company.gerenteTelefone = document.getElementById('cf-gerente-tel').value.trim();
+      company.regime = regime;
+
+      if (isNew){
+        state.companies.push(company);
+      }
+      state.activeCompanyId = company.id;
+      renderEmpresasTab();
+      showToast('Empresa salva');
+    });
+  }
+
+
+  /* ============================================================
+     RENDER: TAB "DADOS" (Informações da empresa ativa)
+     ============================================================ */
+  const dadosContentEl = document.getElementById('dados-content');
+
+  function renderDadosTab(){
+    const company = state.companies.find(c=> c.id === state.activeCompanyId);
+
+    if (!company){
+      dadosContentEl.innerHTML = `
+        <div class="empty-state" style="padding-top:24px;">
+          <div class="icon-circle">${ICON_BUILDING}</div>
+          <h3>Nenhuma empresa selecionada</h3>
+          <p>Cadastre ou selecione uma empresa na aba <strong>Empresas</strong> para ver os dados.</p>
+        </div>
+        <button class="btn btn-secondary" id="btn-go-empresas">Ir para Empresas</button>
+      `;
+      document.getElementById('btn-go-empresas').addEventListener('click', ()=> switchTab('empresas'));
+      return;
+    }
+
+    const rows = [
+      ['Nome da empresa', company.nome],
+      ['CNPJ', company.cnpj],
+      ['Endereço', company.endereco],
+      ['Responsável', company.gerenteNome],
+      ['Telefone do responsável', company.gerenteTelefone],
+      ['Regime tributário', regimeLabel(company.regime)]
+    ];
+
+    dadosContentEl.innerHTML = `
+      <div class="card">
+        <div class="legend">
+          ${rows.map(([label, value])=> `
+            <div class="legend-item">
+              <span class="legend-name text-secondary">${label}</span>
+              <span class="legend-value" style="text-align:right;">${escapeHtml(value) || '<span class="text-secondary" style="font-weight:500;">Não informado</span>'}</span>
+            </div>
+          `).join('')}
+        </div>
+        <p class="text-secondary" style="font-size:12.5px; margin-top:14px; line-height:1.45;">
+          ${company.regime === 'presumido'
+            ? 'No Lucro Presumido/Real, o custo do funcionário inclui CPP (INSS Patronal) e RAT/Sistema S sobre a folha.'
+            : 'No Simples Nacional, esses encargos já estão embutidos no DAS — por isso o custo direto sobre a folha tende a ser menor.'}
+        </p>
+      </div>
+      <button class="btn btn-primary" id="btn-edit-company">Editar dados</button>
+    `;
+
+    document.getElementById('btn-edit-company').addEventListener('click', ()=>{
+      switchTab('empresas');
+      openCompanyForm(company, false);
+    });
+  }
+
+  /* ============================================================
+     HELPERS
+     ============================================================ */
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"']/g, m=> ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[m]));
+  }
+
+  // Formatação manual no padrão brasileiro (R$ 1.234,56), sem depender
+  // dos dados de locale do Intl/toLocaleString (podem não estar disponíveis
+  // em todos os ambientes de execução).
+  function formatBRL(value){
+    const n = Number(value) || 0;
+    const negative = n < 0;
+    const fixed = Math.abs(n).toFixed(2);
+    const [intPart, decPart] = fixed.split('.');
+    const withThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (negative ? '-' : '') + 'R$ ' + withThousands + ',' + decPart;
+  }
+
+  function formatPercent(value){
+    return (Number(value) || 0).toFixed(1).replace('.', ',') + '%';
+  }
+
+  function formatDateBR(date){
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+
+  /* ============================================================
+     ENGINE DE CÁLCULO
+     Tabelas de alíquotas vigentes — revisar anualmente
+     (INSS: Portaria MPS/MF, IRRF: Lei/Receita Federal)
+     ============================================================ */
+  const INSS_FAIXAS = [
+    { limite: 1518.00, aliquota: 0.075 },
+    { limite: 2793.88, aliquota: 0.09  },
+    { limite: 4190.83, aliquota: 0.12  },
+    { limite: 8157.41, aliquota: 0.14  }
+  ];
+
+  const IRRF_FAIXAS = [
+    { limite: 2259.20,  aliquota: 0,     deducao: 0      },
+    { limite: 2826.65,  aliquota: 0.075, deducao: 169.44 },
+    { limite: 3751.05,  aliquota: 0.15,  deducao: 381.44 },
+    { limite: 4664.68,  aliquota: 0.225, deducao: 662.77 },
+    { limite: Infinity, aliquota: 0.275, deducao: 896.00 }
+  ];
+
+  const FGTS_ALIQUOTA = 0.08;
+  const CPP_ALIQUOTA = 0.20;            // INSS Patronal — somente Lucro Presumido/Real
+  const RAT_TERCEIROS_ALIQUOTA = 0.078; // RAT + Sistema S (estimativa média) — somente Lucro Presumido/Real
+  const VT_DESCONTO_MAX = 0.06;         // teto legal de desconto do VT sobre o salário
+
+  // INSS progressivo por faixas, com teto sobre o limite máximo da tabela.
+  function calcINSS(bruto){
+    const teto = INSS_FAIXAS[INSS_FAIXAS.length - 1].limite;
+    const base = Math.min(bruto, teto);
+    let inss = 0;
+    let limiteAnterior = 0;
+    for (const faixa of INSS_FAIXAS){
+      if (base > limiteAnterior){
+        inss += (Math.min(base, faixa.limite) - limiteAnterior) * faixa.aliquota;
+      }
+      limiteAnterior = faixa.limite;
+    }
+    return inss;
+  }
+
+  // IRRF sobre (bruto - INSS), sem dependentes nesta versão do MVP.
+  function calcIRRF(bruto, inss){
+    const base = Math.max(0, bruto - inss);
+    for (const faixa of IRRF_FAIXAS){
+      if (base <= faixa.limite){
+        return Math.max(0, base * faixa.aliquota - faixa.deducao);
+      }
+    }
+    return 0;
+  }
+
+  // Provisões mensais de 13º e férias (com 1/3 constitucional).
+  function calcProvisoes(bruto){
+    const provisao13 = bruto / 12;
+    const provisaoFerias = (bruto * (4/3)) / 12;
+    return { provisao13, provisaoFerias, total: provisao13 + provisaoFerias };
+  }
+
+  // FGTS + (CPP/RAT/Sistema S quando Lucro Presumido/Real) sobre bruto + provisões.
+  function calcEncargosPatronais(bruto, provisoes, regime){
+    const baseEncargos = bruto + provisoes.total;
+    const fgts = baseEncargos * FGTS_ALIQUOTA;
+    let cpp = 0, ratTerceiros = 0;
+    if (regime === 'presumido'){
+      cpp = baseEncargos * CPP_ALIQUOTA;
+      ratTerceiros = baseEncargos * RAT_TERCEIROS_ALIQUOTA;
+    }
+    return { baseEncargos, fgts, cpp, ratTerceiros, total: fgts + cpp + ratTerceiros };
+  }
+
+  function calcBeneficios(funcionario){
+    const b = funcionario.beneficios || {};
+    let total = 0;
+    const detalhe = {};
+    ['vt','vr','saude','outros'].forEach(key=>{
+      const item = b[key];
+      const valor = (item && item.on) ? (Number(item.valor) || 0) : 0;
+      detalhe[key] = valor;
+      total += valor;
+    });
+    return { detalhe, total };
+  }
+
+  // Desconto do VT no holerite: até 6% do bruto, limitado ao valor do VT.
+  function calcDescontoVT(bruto, funcionario){
+    const vt = funcionario.beneficios && funcionario.beneficios.vt;
+    if (!vt || !vt.on) return 0;
+    const valorVT = Number(vt.valor) || 0;
+    return Math.min(bruto * VT_DESCONTO_MAX, valorVT);
+  }
+
+  // Cálculo completo do custo real de um funcionário para a empresa.
+  function calcularCustoFuncionario(funcionario, company){
+    const bruto = Number(funcionario.bruto) || 0;
+
+    const inss = calcINSS(bruto);
+    const irrf = calcIRRF(bruto, inss);
+    const descontoVT = calcDescontoVT(bruto, funcionario);
+    const descontosFuncionario = inss + irrf + descontoVT;
+    const liquido = bruto - descontosFuncionario;
+
+    const provisoes = calcProvisoes(bruto);
+    const encargos = calcEncargosPatronais(bruto, provisoes, company.regime);
+    const beneficios = calcBeneficios(funcionario);
+
+    const custoTotal = bruto + provisoes.total + encargos.total + beneficios.total;
+    const indice = liquido > 0 ? custoTotal / liquido : 0;
+
+    return { bruto, inss, irrf, descontoVT, descontosFuncionario, liquido, provisoes, encargos, beneficios, custoTotal, indice };
+  }
+
+  /* ============================================================
+     RENDER: TAB "FUNCIONÁRIOS" (Equipe)
+     ============================================================ */
+  const employeeListEl = document.getElementById('employee-list');
+  const employeeFormWrap = document.getElementById('employee-form-wrap');
+  const equipeCompanyListEl = document.getElementById('equipe-company-list');
+
+  function emptyFuncionario(){
+    return {
+      id: 'f_' + Date.now(),
+      nome: '',
+      cargo: '',
+      bruto: '',
+      beneficios: {
+        vt:    { on:false, valor:'' },
+        vr:    { on:false, valor:'' },
+        saude: { on:false, valor:'' },
+        outros:{ on:false, valor:'' }
+      }
+    };
+  }
+
+  function renderFuncionariosTab(){
+    ensureActiveCompany();
+    equipeCompanyListEl.innerHTML = '';
+    employeeListEl.innerHTML = '';
+    employeeFormWrap.classList.add('hidden');
+
+    if (state.companies.length === 0){
+      equipeCompanyListEl.innerHTML = `
+        <div class="empty-state" style="padding-top:24px;">
+          <div class="icon-circle">${ICON_BUILDING}</div>
+          <h3>Nenhuma empresa cadastrada</h3>
+          <p>Cadastre uma empresa na aba <strong>Empresas</strong> antes de adicionar colaboradores.</p>
+        </div>
+        <button class="btn btn-secondary" id="btn-go-empresas-emp">Ir para Empresas</button>
+      `;
+      document.getElementById('btn-go-empresas-emp').addEventListener('click', ()=> switchTab('empresas'));
+      return;
+    }
+
+    // ---- Boxes de empresa (escolha qual empresa receberá o colaborador) ----
+    state.companies.forEach(c=>{
+      const isActive = c.id === state.activeCompanyId;
+      const card = document.createElement('div');
+      card.className = 'card company-card' + (isActive ? ' active-company' : '');
+      card.innerHTML = `
+        <div class="company-avatar">${initials(c.nome)}</div>
+        <div class="company-info">
+          <div class="company-name">${escapeHtml(c.nome || 'Empresa sem nome')}</div>
+          <div class="company-meta">${c.funcionarios.length} colaborador${c.funcionarios.length !== 1 ? 'es' : ''} · ${regimeLabel(c.regime)}</div>
+        </div>
+        ${isActive ? '<span class="badge">Selecionada</span>' : ICON_CHEVRON}
+      `;
+      card.addEventListener('click', ()=>{
+        state.activeCompanyId = c.id;
+        renderCompanySwitcher();
+        renderFuncionariosTab();
+      });
+      equipeCompanyListEl.appendChild(card);
+    });
+
+    const company = state.companies.find(c=> c.id === state.activeCompanyId);
+
+    // ---- Lista de colaboradores da empresa selecionada ----
+    if (company.funcionarios && company.funcionarios.length > 0){
+      company.funcionarios.forEach(funcionario=>{
+        const r = calcularCustoFuncionario(funcionario, company);
+        const card = document.createElement('div');
+        card.className = 'card employee-card';
+        const metaParts = [];
+        if (funcionario.cargo) metaParts.push(escapeHtml(funcionario.cargo));
+        metaParts.push(`Bruto ${formatBRL(r.bruto)}`, `Líquido ${formatBRL(r.liquido)}`);
+        card.innerHTML = `
+          <div class="employee-card-main">
+            <div class="employee-info">
+              <div class="employee-name">${escapeHtml(funcionario.nome || 'Colaborador sem nome')}</div>
+              <div class="employee-meta">${metaParts.join(' · ')}</div>
+            </div>
+            <div>
+              <div class="employee-cost">${formatBRL(r.custoTotal)}</div>
+              <div class="employee-cost-label">custo total</div>
+            </div>
+          </div>
+          <div class="employee-card-actions">
+            <button class="card-action-btn" data-action="edit">${ICON_EDIT} Editar</button>
+            <button class="card-action-btn danger" data-action="delete">${ICON_TRASH} Excluir</button>
+          </div>
+        `;
+        card.querySelector('.employee-card-main').addEventListener('click', ()=> openResult(funcionario, company));
+        card.querySelector('[data-action="edit"]').addEventListener('click', (e)=>{
+          e.stopPropagation();
+          openEmployeeForm(company, funcionario);
+        });
+        card.querySelector('[data-action="delete"]').addEventListener('click', (e)=>{
+          e.stopPropagation();
+          company.funcionarios = company.funcionarios.filter(f=> f.id !== funcionario.id);
+          renderFuncionariosTab();
+          showToast('Colaborador excluído');
+        });
+        employeeListEl.appendChild(card);
+      });
+    }
+  }
+
+  function openEmployeeForm(company, existing){
+    const isEdit = !!existing;
+    const funcionario = existing || emptyFuncionario();
+    employeeFormWrap.classList.remove('hidden');
+
+    document.getElementById('emp-form-title').textContent = isEdit ? 'Editar colaborador' : 'Novo colaborador';
+
+    const inputNome = document.getElementById('input-emp-nome');
+    const inputCargo = document.getElementById('input-emp-cargo');
+    const inputBruto = document.getElementById('input-emp-bruto');
+    inputNome.value = funcionario.nome || '';
+    inputCargo.value = funcionario.cargo || '';
+    inputBruto.value = funcionario.bruto || '';
+
+    ['vt','vr','saude','outros'].forEach(key=>{
+      const sw = employeeFormWrap.querySelector(`[data-switch="${key}"]`);
+      const amountWrap = employeeFormWrap.querySelector(`[data-amount="${key}"]`);
+      const input = document.getElementById('input-emp-' + key);
+      const benefit = funcionario.beneficios[key];
+      sw.classList.toggle('on', !!benefit.on);
+      amountWrap.classList.toggle('hidden', !benefit.on);
+      input.value = benefit.valor || '';
+
+      sw.onclick = ()=>{
+        funcionario.beneficios[key].on = !funcionario.beneficios[key].on;
+        sw.classList.toggle('on', funcionario.beneficios[key].on);
+        amountWrap.classList.toggle('hidden', !funcionario.beneficios[key].on);
+      };
+    });
+
+    document.getElementById('btn-cancel-emp').onclick = ()=>{
+      employeeFormWrap.classList.add('hidden');
+    };
+
+    document.getElementById('btn-calc-emp').onclick = ()=>{
+      funcionario.nome = inputNome.value.trim();
+      funcionario.cargo = inputCargo.value.trim();
+      funcionario.bruto = Number(inputBruto.value) || 0;
+
+      if (funcionario.bruto <= 0){
+        showToast('Informe o salário bruto');
+        return;
+      }
+
+      ['vt','vr','saude','outros'].forEach(key=>{
+        funcionario.beneficios[key].valor = Number(document.getElementById('input-emp-' + key).value) || 0;
+      });
+
+      if (!isEdit){
+        company.funcionarios.push(funcionario);
+      }
+      employeeFormWrap.classList.add('hidden');
+      renderFuncionariosTab();
+      openResult(funcionario, company);
+    };
+  }
+
+  /* ============================================================
+     OVERLAY DE RESULTADO — hero card + donut de composição
+     ============================================================ */
+  const viewResult = document.getElementById('view-result');
+  const resultBodyEl = document.getElementById('result-body');
+  const btnCloseResult = document.getElementById('btn-close-result');
+
+  btnCloseResult.addEventListener('click', ()=> viewResult.classList.remove('show'));
+
+  function openResult(funcionario, company){
+    const r = calcularCustoFuncionario(funcionario, company);
+
+    const encargosProvisoes = r.provisoes.total + r.encargos.total;
+    const { donutSvg, legendHtml } = renderDonutFromSegments([
+      { label: 'Recebido pelo colaborador', value: r.liquido, color: 'var(--primary)' },
+      { label: 'Descontos (INSS, IRRF, VT)', value: r.descontosFuncionario, color: 'var(--accent)' },
+      { label: 'Encargos + provisões (13º, férias, FGTS' + (company.regime === 'presumido' ? ', CPP/RAT' : '') + ')', value: encargosProvisoes, color: 'var(--chart-3)' },
+      { label: 'Benefícios pagos pela empresa', value: r.beneficios.total, color: 'var(--chart-4)' }
+    ], { rInner: 0, labelFontSize: 15, labelBgRadius: 19 });
+
+    const regimeNota = company.regime === 'presumido'
+      ? 'Inclui CPP (INSS Patronal 20%) e RAT/Sistema S (~7,8%) sobre folha + provisões, conforme o regime Lucro Presumido/Real.'
+      : 'No Simples Nacional, CPP e RAT/Sistema S já estão embutidos no DAS — por isso não entram como custo direto da folha.';
+
+    resultBodyEl.innerHTML = `
+      <div class="hero-card">
+        <div class="hero-logo-negative">QFolha</div>
+        <span class="label-eyebrow">Custo real para ${escapeHtml(company.nome || 'a empresa')}</span>
+        <div class="hero-value">${formatBRL(r.custoTotal)}</div>
+        <div class="hero-sub">por mês, com ${escapeHtml(funcionario.nome || 'este colaborador')}</div>
+        <div class="hero-divider"></div>
+        <div class="hero-row">
+          <div>
+            <span class="label-eyebrow">Salário bruto</span>
+            <div class="hero-value" style="font-size:20px;">${formatBRL(r.bruto)}</div>
+          </div>
+          <div style="text-align:right;">
+            <span class="label-eyebrow">Recebido (líquido)</span>
+            <div class="hero-value" style="font-size:20px;">${formatBRL(r.liquido)}</div>
+          </div>
+        </div>
+        ${buildIndiceBox(r.indice, 'recebido pelo colaborador', 'custo total para a empresa')}
+      </div>
+
+      <div class="card donut-wrap">
+        <span class="label-eyebrow">Para onde vai o custo total</span>
+        <div class="donut">
+          ${donutSvg}
+        </div>
+        <div class="legend">${legendHtml}</div>
+      </div>
+
+      <div class="card">
+        <span class="label-eyebrow">Detalhamento</span>
+        <div class="legend" style="margin-top:10px;">
+          <div class="legend-item"><span class="legend-name">Salário bruto</span><span class="legend-value">${formatBRL(r.bruto)}</span></div>
+          <div class="legend-item"><span class="legend-name">(–) INSS do colaborador</span><span class="legend-value">${formatBRL(r.inss)}</span></div>
+          <div class="legend-item"><span class="legend-name">(–) IRRF</span><span class="legend-value">${formatBRL(r.irrf)}</span></div>
+          ${r.descontoVT > 0 ? `<div class="legend-item"><span class="legend-name">(–) Desconto VT</span><span class="legend-value">${formatBRL(r.descontoVT)}</span></div>` : ''}
+          <div class="legend-item"><span class="legend-name">(=) Salário líquido</span><span class="legend-value" style="color:var(--primary);">${formatBRL(r.liquido)}</span></div>
+          <div class="legend-item" style="margin-top:6px;"><span class="legend-name">Provisão 13º</span><span class="legend-value">${formatBRL(r.provisoes.provisao13)}</span></div>
+          <div class="legend-item"><span class="legend-name">Provisão férias + 1/3</span><span class="legend-value">${formatBRL(r.provisoes.provisaoFerias)}</span></div>
+          <div class="legend-item"><span class="legend-name">FGTS (8%)</span><span class="legend-value">${formatBRL(r.encargos.fgts)}</span></div>
+          ${company.regime === 'presumido' ? `
+          <div class="legend-item"><span class="legend-name">CPP — INSS Patronal (20%)</span><span class="legend-value">${formatBRL(r.encargos.cpp)}</span></div>
+          <div class="legend-item"><span class="legend-name">RAT + Terceiros (~7,8%)</span><span class="legend-value">${formatBRL(r.encargos.ratTerceiros)}</span></div>
+          ` : ''}
+          ${r.beneficios.total > 0 ? `<div class="legend-item" style="margin-top:6px;"><span class="legend-name">Benefícios (VT, VR, saúde, outros)</span><span class="legend-value">${formatBRL(r.beneficios.total)}</span></div>` : ''}
+        </div>
+        <p class="text-secondary" style="font-size:12px; line-height:1.5; margin-top:14px;">${regimeNota} Valores estimados — consulte seu contador para o cálculo oficial.</p>
+      </div>
+    `;
+
+    viewResult.classList.add('show');
+  }
+
+  /* ============================================================
+     RENDER: TAB "DASHBOARD" — visão consolidada da empresa ativa
+     ============================================================ */
+  const dashboardContentEl = document.getElementById('dashboard-content');
+  const ICON_CHART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M3 3v18h18"/><path d="M7 16l4-6 4 3 5-7"/></svg>';
+
+  function aggregateCompany(company){
+    const totals = {
+      count: company.funcionarios.length,
+      bruto: 0, liquido: 0, descontosFuncionario: 0,
+      encargosProvisoes: 0, beneficios: 0, custoTotal: 0
+    };
+    company.funcionarios.forEach(f=>{
+      const r = calcularCustoFuncionario(f, company);
+      totals.bruto += r.bruto;
+      totals.liquido += r.liquido;
+      totals.descontosFuncionario += r.descontosFuncionario;
+      totals.encargosProvisoes += (r.provisoes.total + r.encargos.total);
+      totals.beneficios += r.beneficios.total;
+      totals.custoTotal += r.custoTotal;
+    });
+    totals.indiceMedio = totals.liquido > 0 ? totals.custoTotal / totals.liquido : 0;
+    return totals;
+  }
+
+  // Soma os totais de todas as empresas cadastradas (visão "Consolidado").
+  function aggregateAll(){
+    const totals = {
+      count: 0, empresas: state.companies.length,
+      bruto: 0, liquido: 0, descontosFuncionario: 0,
+      encargosProvisoes: 0, beneficios: 0, custoTotal: 0
+    };
+    state.companies.forEach(company=>{
+      const t = aggregateCompany(company);
+      totals.count += t.count;
+      totals.bruto += t.bruto;
+      totals.liquido += t.liquido;
+      totals.descontosFuncionario += t.descontosFuncionario;
+      totals.encargosProvisoes += t.encargosProvisoes;
+      totals.beneficios += t.beneficios;
+      totals.custoTotal += t.custoTotal;
+    });
+    totals.indiceMedio = totals.liquido > 0 ? totals.custoTotal / totals.liquido : 0;
+    return totals;
+  }
+
+  // Monta o gráfico donut (background + legenda) a partir dos totais agregados.
+  const ICON_ARROW_RIGHT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>';
+
+  // Monta o box "para cada R$1 ... a empresa investe R$X", com diagramação em duas colunas.
+  function buildIndiceBox(indice, leftCaption, rightCaption){
+    return `
+      <div class="indice-box">
+        <div class="indice-stat">
+          <span class="indice-value">${formatBRL(1)}</span>
+          <span class="indice-caption">${leftCaption}</span>
+        </div>
+        <div class="indice-arrow">${ICON_ARROW_RIGHT}</div>
+        <div class="indice-stat right">
+          <span class="indice-value">${formatBRL(indice)}</span>
+          <span class="indice-caption">${rightCaption}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // Converte um ângulo (graus, 0 = topo, sentido horário) em coordenadas
+  // cartesianas sobre um círculo de centro (cx,cy) e raio r.
+  function polarToCartesian(cx, cy, r, angleDeg){
+    const rad = (angleDeg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  // Caminho SVG (path d=) de uma fatia de pizza/donut entre dois ângulos.
+  // Se rInner for 0, gera um setor de pizza "cheio" (do centro até a borda).
+  function donutSlicePath(cx, cy, rOuter, rInner, startAngle, endAngle){
+    const span = Math.min(endAngle - startAngle, 359.99);
+    const end = startAngle + span;
+    const p0 = polarToCartesian(cx, cy, rOuter, startAngle);
+    const p1 = polarToCartesian(cx, cy, rOuter, end);
+    const largeArc = span > 180 ? 1 : 0;
+
+    if (rInner <= 0){
+      return [
+        `M ${cx} ${cy}`,
+        `L ${p0.x} ${p0.y}`,
+        `A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${p1.x} ${p1.y}`,
+        'Z'
+      ].join(' ');
+    }
+
+    const p2 = polarToCartesian(cx, cy, rInner, end);
+    const p3 = polarToCartesian(cx, cy, rInner, startAngle);
+    return [
+      `M ${p0.x} ${p0.y}`,
+      `A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${p1.x} ${p1.y}`,
+      `L ${p2.x} ${p2.y}`,
+      `A ${rInner} ${rInner} 0 ${largeArc} 0 ${p3.x} ${p3.y}`,
+      'Z'
+    ].join(' ');
+  }
+
+  // Gera o SVG do donut/pizza (com percentuais nas fatias) + legenda, a partir
+  // de uma lista de segmentos já calculados: [{ label, value, color }, ...]
+  // options.rInner: raio interno (0 = pizza cheia, >0 = donut). Padrão: donut.
+  // options.labelFontSize / labelBgRadius: ajustam o tamanho do rótulo de %.
+  function renderDonutFromSegments(segments, options){
+    options = options || {};
+    const rInner = options.rInner !== undefined ? options.rInner : 70;
+    const labelFontSize = options.labelFontSize || 11;
+    const labelBgRadius = options.labelBgRadius || 15;
+
+    segments = segments.filter(s=> s.value > 0.005);
+    const total = segments.reduce((sum,s)=> sum + s.value, 0) || 1;
+    const CX = 100, CY = 100, R_OUT = 98, R_IN = rInner;
+    const R_LABEL = rInner > 0 ? (R_OUT + R_IN) / 2 : R_OUT * 0.62;
+
+    let acc = 0;
+    let slicesSvg = '';
+    let labelsSvg = '';
+    segments.forEach(s=>{
+      const pct = (s.value / total) * 100;
+      const startAngle = (acc / total) * 360;
+      acc += s.value;
+      const endAngle = (acc / total) * 360;
+
+      slicesSvg += `<path d="${donutSlicePath(CX, CY, R_OUT, R_IN, startAngle, endAngle)}" style="fill:${s.color};"/>`;
+
+      // Rótulo de percentual sobre a fatia (apenas se houver espaço suficiente).
+      if (pct >= 7){
+        const mid = (startAngle + endAngle) / 2;
+        const pos = polarToCartesian(CX, CY, R_LABEL, mid);
+        labelsSvg += `
+          <circle class="donut-slice-label-bg" cx="${pos.x}" cy="${pos.y}" r="${labelBgRadius}"/>
+          <text class="donut-slice-label" style="font-size:${labelFontSize}px;" x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="central">${formatPercent(pct).replace(',0', '')}</text>
+        `;
+      }
+    });
+
+    const donutSvg = `
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        ${slicesSvg}
+        ${labelsSvg}
+      </svg>
+    `;
+
+    const legendHtml = segments.map(s=> `
+      <div class="legend-item">
+        <div class="legend-left">
+          <div class="legend-dot" style="background:${s.color};"></div>
+          <span class="legend-name">${s.label}</span>
+        </div>
+        <div style="text-align:right;">
+          <div class="legend-value">${formatBRL(s.value)}</div>
+          <div class="legend-percent">${formatPercent((s.value / total) * 100)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    return { donutSvg, legendHtml };
+  }
+
+  // Monta o gráfico de pizza/donut a partir dos totais agregados (Dashboard).
+  function buildDonut(t){
+    return renderDonutFromSegments([
+      { label: 'Recebido pelos colaboradores', value: t.liquido, color: 'var(--primary)' },
+      { label: 'Descontos (INSS, IRRF, VT)', value: t.descontosFuncionario, color: 'var(--accent)' },
+      { label: 'Encargos + provisões', value: t.encargosProvisoes, color: 'var(--chart-3)' },
+      { label: 'Benefícios pagos pela empresa', value: t.beneficios, color: 'var(--chart-4)' }
+    ]);
+  }
+
+  function renderDashboardTab(){
+    const consolidado = state.dashboardScope === 'consolidado' && state.companies.length > 1;
+    if (state.companies.length === 0){
+      dashboardContentEl.innerHTML = `
+        <div class="empty-state" style="padding-top:24px;">
+          <div class="icon-circle">${ICON_BUILDING}</div>
+          <h3>Nenhuma empresa cadastrada</h3>
+          <p>Cadastre uma empresa na aba <strong>Empresas</strong> para ver o resumo da folha.</p>
+        </div>
+        <button class="btn btn-secondary" id="btn-go-empresas-dash">Ir para Empresas</button>
+      `;
+      document.getElementById('btn-go-empresas-dash').addEventListener('click', ()=> switchTab('empresas'));
+      return;
+    }
+
+    if (consolidado){
+      renderDashboardConsolidado();
+    } else {
+      renderDashboardEmpresa();
+    }
+  }
+
+  // Visão consolidada: soma de todas as empresas + lista de empresas.
+  function renderDashboardConsolidado(){
+    const t = aggregateAll();
+
+    if (t.count === 0){
+      dashboardContentEl.innerHTML = `
+        <div class="empty-state" style="padding-top:12px;">
+          <div class="icon-circle">${ICON_CHART}</div>
+          <h3>Sem colaboradores ainda</h3>
+          <p>Adicione colaboradores na aba <strong>Equipe</strong> em qualquer empresa para ver o consolidado.</p>
+        </div>`;
+      return;
+    }
+
+    const { donutBg, legendHtml } = buildDonut(t);
+
+    const companyRows = state.companies.map(company=>{
+      const ct = aggregateCompany(company);
+      return `
+        <div class="card company-summary-row" data-company-id="${company.id}">
+          <div class="company-avatar">${initials(company.nome)}</div>
+          <div class="company-info">
+            <div class="company-name">${escapeHtml(company.nome || 'Empresa sem nome')}</div>
+            <div class="company-meta">${ct.count} colaborador${ct.count !== 1 ? 'es' : ''} · ${regimeLabel(company.regime)}</div>
+          </div>
+          <div>
+            <div class="employee-cost">${formatBRL(ct.custoTotal)}</div>
+            <div class="employee-cost-label">custo total</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    dashboardContentEl.innerHTML = `
+      <div class="hero-card">
+        <div class="hero-logo-negative">QFolha</div>
+        <span class="label-eyebrow">Custo total — todas as empresas</span>
+        <div class="hero-value">${formatBRL(t.custoTotal)}</div>
+        <div class="hero-sub">por mês, em ${t.empresas} empresas · ${t.count} colaborador${t.count > 1 ? 'es' : ''}</div>
+        <div class="hero-divider"></div>
+        ${buildIndiceBox(t.indiceMedio, 'recebido pelos colaboradores', 'investido pela empresa')}
+      </div>
+
+      <div class="stat-grid">
+        <div class="card stat-box">
+          <span class="stat-value">${formatBRL(t.bruto)}</span>
+          <span class="stat-label">Total de salários brutos</span>
+        </div>
+        <div class="card stat-box">
+          <span class="stat-value">${formatBRL(t.liquido)}</span>
+          <span class="stat-label">Total líquido aos colaboradores</span>
+        </div>
+        <div class="card stat-box">
+          <span class="stat-value">${formatBRL(t.encargosProvisoes)}</span>
+          <span class="stat-label">Encargos + provisões</span>
+        </div>
+        <div class="card stat-box">
+          <span class="stat-value">${formatBRL(t.beneficios)}</span>
+          <span class="stat-label">Benefícios pagos</span>
+        </div>
+      </div>
+
+      <div class="card donut-wrap">
+        <span class="label-eyebrow">Composição do custo total</span>
+        <div class="donut" style="background:${donutBg};">
+          <div class="donut-center">
+            <div class="donut-pct">${t.empresas}</div>
+            <div class="donut-label">empresa${t.empresas > 1 ? 's' : ''}</div>
+          </div>
+        </div>
+        <div class="legend">${legendHtml}</div>
+      </div>
+
+      <div>
+        <span class="label-eyebrow">Por empresa</span>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">${companyRows}</div>
+      </div>
+    `;
+
+    dashboardContentEl.querySelectorAll('.company-summary-row').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        state.activeCompanyId = row.dataset.companyId;
+        state.dashboardScope = 'empresa';
+        renderCompanySwitcher();
+        renderDashboardTab();
+      });
+    });
+  }
+
+  // Visão de uma única empresa (ativa).
+  function renderDashboardEmpresa(){
+    const company = state.companies.find(c=> c.id === state.activeCompanyId) || state.companies[0];
+    if (!state.activeCompanyId) state.activeCompanyId = company.id;
+
+    if (!company.funcionarios || company.funcionarios.length === 0){
+      dashboardContentEl.innerHTML = `
+        <div class="empty-state" style="padding-top:12px;">
+          <div class="icon-circle">${ICON_CHART}</div>
+          <h3>Sem colaboradores ainda</h3>
+          <p>Adicione colaboradores na aba <strong>Equipe</strong> para ver o custo total consolidado de <strong>${escapeHtml(company.nome || 'sua empresa')}</strong>.</p>
+        </div>`;
+      return;
+    }
+
+    const t = aggregateCompany(company);
+    const { donutBg, legendHtml } = buildDonut(t);
+
+    const employeeRows = company.funcionarios.map(f=>{
+      const r = calcularCustoFuncionario(f, company);
+      const meta = [f.cargo, `Bruto ${formatBRL(r.bruto)}`, `Líquido ${formatBRL(r.liquido)}`].filter(Boolean).map(escapeHtml).join(' · ');
+      return `
+        <div class="card employee-card" data-emp-id="${f.id}">
+          <div class="employee-card-main">
+            <div class="employee-info">
+              <div class="employee-name">${escapeHtml(f.nome || 'Colaborador sem nome')}</div>
+              <div class="employee-meta">${meta}</div>
+            </div>
+            <div>
+              <div class="employee-cost">${formatBRL(r.custoTotal)}</div>
+              <div class="employee-cost-label">custo total</div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    dashboardContentEl.innerHTML = `
+      <div class="hero-card">
+        <div class="hero-logo-negative">QFolha</div>
+        <span class="label-eyebrow">Custo total da folha — ${escapeHtml(company.nome || 'empresa')}</span>
+        <div class="hero-value">${formatBRL(t.custoTotal)}</div>
+        <div class="hero-sub">por mês, com ${t.count} colaborador${t.count > 1 ? 'es' : ''}</div>
+        <div class="hero-divider"></div>
+        ${buildIndiceBox(t.indiceMedio, 'recebido pelos colaboradores', 'investido pela empresa')}
+      </div>
+
+      <div class="stat-grid">
+        <div class="card stat-box">
+          <span class="stat-value">${formatBRL(t.bruto)}</span>
+          <span class="stat-label">Total de salários brutos</span>
+        </div>
+        <div class="card stat-box">
+          <span class="stat-value">${formatBRL(t.liquido)}</span>
+          <span class="stat-label">Total líquido aos colaboradores</span>
+        </div>
+        <div class="card stat-box">
+          <span class="stat-value">${formatBRL(t.encargosProvisoes)}</span>
+          <span class="stat-label">Encargos + provisões</span>
+        </div>
+        <div class="card stat-box">
+          <span class="stat-value">${formatBRL(t.beneficios)}</span>
+          <span class="stat-label">Benefícios pagos</span>
+        </div>
+      </div>
+
+      <div class="card donut-wrap">
+        <span class="label-eyebrow">Composição do custo total</span>
+        <div class="donut" style="background:${donutBg};">
+          <div class="donut-center">
+            <div class="donut-pct">${t.count}</div>
+            <div class="donut-label">colaborador${t.count > 1 ? 'es' : ''}</div>
+          </div>
+        </div>
+        <div class="legend">${legendHtml}</div>
+      </div>
+
+      <div>
+        <span class="label-eyebrow">Colaboradores</span>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">${employeeRows}</div>
+      </div>
+    `;
+
+    dashboardContentEl.querySelectorAll('.employee-card').forEach(card=>{
+      card.addEventListener('click', ()=>{
+        const f = company.funcionarios.find(x=> x.id === card.dataset.empId);
+        if (f) openResult(f, company);
+      });
+    });
+  }
+
+  /* ============================================================
+     RENDER: TAB "RELATÓRIOS" — resumo imprimível para o empresário
+     ============================================================ */
+  const relatoriosContentEl = document.getElementById('relatorios-content');
+  const ICON_PRINT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M6 9V2h12v7"/><rect x="6" y="14" width="12" height="8"/><path d="M6 14H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-2"/></svg>';
+  const ICON_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>';
+  const ICON_PDF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h1.5a1.5 1.5 0 0 0 0-3H9v5"/><path d="M13 17v-5h2"/><path d="M13 14.5h1.5"/><path d="M17 17v-5h1.5"/></svg>';
+  const ICON_WHATSAPP = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.6-.8-1.8-.9-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-1.2-.5-2.4-1.5-3.3-2.8-.2-.3 0-.4.1-.6.2-.2.4-.5.5-.7.1-.2 0-.4-.1-.6-.1-.2-.6-1.5-.8-2-.1-.5-.3-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3 1 2.6 1.1 2.8.1.2 1.9 3 4.7 4.1 2.2.9 2.7.7 3.2.6.5-.1 1.6-.7 1.8-1.3.2-.6.2-1.2.1-1.3-.1-.1-.3-.2-.6-.3z"/><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l4.9-1.4A10 10 0 1 0 12 2z"/></svg>';
+  const ICON_EMAIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>';
+
+  // Monta a seção de relatório de uma empresa (cabeçalho + linhas + subtotal).
+  function buildCompanyReportSection(company, isSubSection){
+    const t = aggregateCompany(company);
+    const rows = company.funcionarios.map(f=>{
+      const r = calcularCustoFuncionario(f, company);
+      return `
+        <div class="report-row">
+          <div>
+            <div class="report-row-name">${escapeHtml(f.nome || 'Colaborador sem nome')}</div>
+            <div class="report-row-meta">Bruto ${formatBRL(r.bruto)} · Líquido ${formatBRL(r.liquido)} · Índice ${formatBRL(r.indice)}</div>
+          </div>
+          <div class="report-row-value">${formatBRL(r.custoTotal)}</div>
+        </div>`;
+    }).join('');
+
+    const letterhead = isSubSection ? `
+      <div class="report-section-title">
+        <div class="rl-name" style="font-size:14.5px;">${escapeHtml(company.nome || 'Empresa sem nome')}</div>
+        <span class="badge">${regimeLabel(company.regime)}</span>
+      </div>
+    ` : `
+      <div class="report-letterhead">
+        <div>
+          <div class="rl-name">${escapeHtml(company.nome || 'Empresa')}</div>
+          <div class="rl-meta">${escapeHtml(company.endereco || '')}</div>
+          <div class="rl-meta">${regimeLabel(company.regime)}</div>
+        </div>
+        <div class="rl-meta" style="text-align:right;">
+          <div style="font-weight:800; color:var(--primary);">QFolha</div>
+          <div>${formatDateBR(new Date())}</div>
+        </div>
+      </div>
+      <div class="hero-divider" style="background:var(--border); margin:14px 0;"></div>
+      <span class="label-eyebrow">Custo por colaborador</span>
+    `;
+
+    if (t.count === 0){
+      return `${letterhead}<p class="text-secondary" style="font-size:13px; margin-top:8px;">Nenhum colaborador cadastrado.</p>`;
+    }
+
+    return `
+      ${letterhead}
+      <div style="margin-top:6px;">${rows}</div>
+      <div class="report-totals">
+        <div class="report-row" style="border-bottom:none;">
+          <div class="report-row-name">Subtotal (${t.count} colaborador${t.count > 1 ? 'es' : ''})</div>
+          <div class="report-row-value" style="font-size:16px; color:var(--primary);">${formatBRL(t.custoTotal)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderRelatoriosTab(){
+    if (state.companies.length === 0){
+      relatoriosContentEl.innerHTML = `
+        <div class="empty-state" style="padding-top:24px;">
+          <div class="icon-circle">${ICON_BUILDING}</div>
+          <h3>Nenhuma empresa cadastrada</h3>
+          <p>Cadastre uma empresa na aba <strong>Empresas</strong> para gerar um relatório.</p>
+        </div>
+        <button class="btn btn-secondary" id="btn-go-empresas-rel">Ir para Empresas</button>
+      `;
+      document.getElementById('btn-go-empresas-rel').addEventListener('click', ()=> switchTab('empresas'));
+      return;
+    }
+
+    const consolidado = state.dashboardScope === 'consolidado' && state.companies.length > 1;
+    const dataStr = formatDateBR(new Date());
+
+    if (consolidado){
+      const t = aggregateAll();
+      if (t.count === 0){
+        relatoriosContentEl.innerHTML = `
+          <div class="empty-state" style="padding-top:12px;">
+            <div class="icon-circle">${ICON_PRINT}</div>
+            <h3>Nada para exportar ainda</h3>
+            <p>Simule pelo menos um colaborador em alguma empresa na aba <strong>Equipe</strong>.</p>
+          </div>`;
+        return;
+      }
+
+      const sections = state.companies.map(c=> buildCompanyReportSection(c, true)).join('<div class="hero-divider" style="background:var(--border); margin:16px 0;"></div>');
+
+      relatoriosContentEl.innerHTML = `
+        <div class="card" id="print-area">
+          <div class="report-letterhead">
+            <div>
+              <div class="rl-name">Relatório consolidado</div>
+              <div class="rl-meta">${t.empresas} empresa${t.empresas > 1 ? 's' : ''} cadastrada${t.empresas > 1 ? 's' : ''}</div>
+            </div>
+            <div class="rl-meta" style="text-align:right;">
+              <div style="font-weight:800; color:var(--primary);">QFolha</div>
+              <div>${dataStr}</div>
+            </div>
+          </div>
+          <div class="hero-divider" style="background:var(--border); margin:14px 0;"></div>
+          ${sections}
+          <div class="report-totals">
+            <div class="report-row" style="border-bottom:none;">
+              <div class="report-row-name">Total geral (${t.count} colaborador${t.count > 1 ? 'es' : ''})</div>
+              <div class="report-row-value" style="font-size:18px; color:var(--primary);">${formatBRL(t.custoTotal)}</div>
+            </div>
+          </div>
+          <p class="text-secondary" style="font-size:12px; line-height:1.5; margin-top:6px;">
+            Valores estimados com base nas alíquotas vigentes (INSS, IRRF, FGTS e, quando aplicável, CPP e RAT/Sistema S) e nas informações cadastradas. Não substitui o cálculo oficial — consulte seu contador.
+          </p>
+        </div>
+
+        <button class="btn btn-primary" id="btn-print-report">${ICON_PDF} Salvar PDF / Compartilhar</button>
+      `;
+    } else {
+      const company = state.companies.find(c=> c.id === state.activeCompanyId) || state.companies[0];
+      if (!state.activeCompanyId) state.activeCompanyId = company.id;
+      const t = aggregateCompany(company);
+
+      if (t.count === 0){
+        relatoriosContentEl.innerHTML = `
+          <div class="empty-state" style="padding-top:12px;">
+            <div class="icon-circle">${ICON_PRINT}</div>
+            <h3>Nada para exportar ainda</h3>
+            <p>Simule pelo menos um colaborador na aba <strong>Equipe</strong> para gerar o relatório de <strong>${escapeHtml(company.nome || 'sua empresa')}</strong>.</p>
+          </div>`;
+        return;
+      }
+
+      relatoriosContentEl.innerHTML = `
+        <div class="card" id="print-area">
+          ${buildCompanyReportSection(company, false)}
+          <p class="text-secondary" style="font-size:12px; line-height:1.5; margin-top:6px;">
+            Valores estimados com base nas alíquotas vigentes (INSS, IRRF, FGTS${company.regime === 'presumido' ? ', CPP, RAT/Sistema S' : ''}) e nas informações cadastradas. Não substitui o cálculo oficial — consulte seu contador.
+          </p>
+        </div>
+
+        <button class="btn btn-primary" id="btn-print-report">${ICON_PDF} Salvar PDF / Compartilhar</button>
+      `;
+    }
+
+    document.getElementById('btn-print-report').addEventListener('click', ()=> handleSavePdfShare(company));
+  }
+
+  /* ============================================================
+     SALVAR PDF / COMPARTILHAR (relatório)
+     Aciona o diálogo de impressão do navegador (folha A4 — o usuário
+     escolhe "Salvar como PDF") e, em seguida, mostra um sheet com
+     opções rápidas de compartilhamento (WhatsApp / E-mail).
+     ============================================================ */
+  const shareOverlayEl = document.getElementById('share-overlay');
+  const shareSheetIconEl = document.getElementById('share-sheet-icon');
+  const shareWhatsappBtn = document.getElementById('share-whatsapp');
+  const shareEmailBtn = document.getElementById('share-email');
+  const shareCancelBtn = document.getElementById('share-cancel');
+
+  shareSheetIconEl.innerHTML = ICON_PDF;
+  shareWhatsappBtn.innerHTML = `${ICON_WHATSAPP} Compartilhar no WhatsApp`;
+  shareEmailBtn.innerHTML = `${ICON_EMAIL} Enviar por e-mail`;
+  shareCancelBtn.innerHTML = 'Fechar';
+
+  function handleSavePdfShare(company){
+    // Abre o diálogo de impressão do navegador (A4) — no celular, esse
+    // diálogo já oferece "Salvar como PDF" e, em muitos casos, "Compartilhar".
+    window.print();
+    // Após o usuário interagir com o diálogo de impressão, oferecemos
+    // os atalhos de compartilhamento direto por WhatsApp/e-mail.
+    openShareSheet(company);
+  }
+
+  function openShareSheet(company){
+    const nomeEmpresa = company ? (company.nome || 'sua empresa') : 'QFolha';
+    const texto = `Relatório de custo de folha — ${nomeEmpresa} (QFolha). Salve o PDF gerado pela impressão e anexe nesta conversa.`;
+
+    shareWhatsappBtn.onclick = ()=>{
+      window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+      closeShareSheet();
+    };
+    shareEmailBtn.onclick = ()=>{
+      const subject = encodeURIComponent('Relatório de custo de folha — ' + nomeEmpresa);
+      const body = encodeURIComponent(texto);
+      window.location.href = `mailto:?subject=${subject}&body=${body}`;
+      closeShareSheet();
+    };
+    shareCancelBtn.onclick = closeShareSheet;
+
+    shareOverlayEl.classList.add('show');
+  }
+
+  function closeShareSheet(){
+    shareOverlayEl.classList.remove('show');
+  }
+
+  shareOverlayEl.addEventListener('click', (e)=>{
+    if (e.target === shareOverlayEl) closeShareSheet();
+  });
+
+
+
+  /* ============================================================
+     INITIAL RENDER
+     ============================================================ */
+  function renderAll(){
+    renderCompanySwitcher();
+    renderEmpresasTab();
+    renderDadosTab();
+    renderFuncionariosTab();
+    renderDashboardTab();
+    renderRelatoriosTab();
+  }
+
+})();
+</script>
+</body>
+</html>
