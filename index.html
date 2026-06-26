@@ -1166,9 +1166,17 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function(){
   "use strict";
+
+  /* ============================================================
+     SUPABASE — configuração
+     ============================================================ */
+  const SUPABASE_URL = 'https://bthpdwnvylhyphyiddlw.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0aHBkd252eWxoeXBoeWlkZGx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0OTkzNTgsImV4cCI6MjA5ODA3NTM1OH0.016BVuRwezZzPn7m_OZXALgvFiW0_maC_cr6cbtXvQ8';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   /* ============================================================
      STATE
@@ -1177,8 +1185,9 @@
     isPremium: localStorage.getItem('qfolha_premium') === '1',
     activeCompanyId: null,
     currentTab: 'empresas',
-    dashboardScope: 'consolidado', // 'consolidado' (todas as empresas) ou 'empresa' (ativa)
-    companies: [] // { id, nome, endereco, regime: 'simples' | 'presumido', funcionarios: [] }
+    dashboardScope: 'consolidado',
+    companies: [],
+    user: null, // usuário autenticado (Supabase Auth)
   };
 
   // Funcionário: { id, nome, bruto, beneficios: { vt:{on,valor}, vr:{on,valor}, saude:{on,valor}, outros:{on,valor} } }
@@ -1239,18 +1248,20 @@
     btnContinue.disabled = !consentChecked;
   });
 
-  btnContinue.addEventListener('click', ()=>{
+  btnContinue.addEventListener('click', async ()=>{
     viewDisclaimer.classList.add('hidden');
-    // Se já tiver conta salva, vai direto para o login; se não, cria conta.
-    const contaSalva = localStorage.getItem('qfolha_email');
-    viewAuth.classList.remove('hidden');
-    if (contaSalva){
-      document.getElementById('tab-entrar').click();
+    // Verificar sessão ativa no Supabase
+    const { data: { session } } = await sb.auth.getSession();
+    if (session){
+      state.user = session.user;
+      await enterApp();
+    } else {
+      viewAuth.classList.remove('hidden');
     }
   });
 
   /* ============================================================
-     AUTENTICAÇÃO — Criar conta / Entrar (localStorage)
+     AUTENTICAÇÃO — Criar conta / Entrar (Supabase Auth)
      ============================================================ */
   const tabCriar = document.getElementById('tab-criar');
   const tabEntrar = document.getElementById('tab-entrar');
@@ -1273,7 +1284,7 @@
   const ICON_EYE_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
   const ICON_EYE_CLOSED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
-  let authMode = 'criar'; // 'criar' | 'entrar'
+  let authMode = 'criar';
 
   function setAuthMode(mode){
     authMode = mode;
@@ -1283,10 +1294,9 @@
     strengthWrap.style.display = mode === 'criar' ? '' : 'none';
     authTitle.textContent = mode === 'criar' ? 'Criar sua conta' : 'Bem-vindo de volta';
     authSubtitle.textContent = mode === 'criar'
-      ? 'Seus dados ficam apenas neste dispositivo.'
+      ? 'Seus dados ficam seguros na nuvem.'
       : 'Informe seu e-mail e senha para entrar.';
     btnAuth.textContent = mode === 'criar' ? 'Criar conta e entrar' : 'Entrar';
-    // Limpar erros
     errEmail.textContent = '';
     errSenha.textContent = '';
     errConfirmar.textContent = '';
@@ -1300,7 +1310,6 @@
   tabCriar.addEventListener('click', ()=> setAuthMode('criar'));
   tabEntrar.addEventListener('click', ()=> setAuthMode('entrar'));
 
-  // Olho — mostrar/ocultar senha
   function toggleEye(inputEl, eyeBtn){
     const isText = inputEl.type === 'text';
     inputEl.type = isText ? 'password' : 'text';
@@ -1309,7 +1318,6 @@
   eyeSenha.addEventListener('click', ()=> toggleEye(authSenha, eyeSenha));
   eyeConfirmar.addEventListener('click', ()=> toggleEye(authConfirmar, eyeConfirmar));
 
-  // Força da senha
   function calcStrength(senha){
     let score = 0;
     if (senha.length >= 8) score++;
@@ -1339,25 +1347,19 @@
     strengthLabel.style.color = cfg.cor;
   });
 
-  // Validações
   function validarEmail(email){
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   }
 
-  function simpleHash(str){
-    // Hash simples (não criptográfico) apenas para não salvar senha em texto puro.
-    let h = 0;
-    for (let i = 0; i < str.length; i++){
-      h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-    }
-    return h.toString(36);
+  function setAuthLoading(loading){
+    btnAuth.disabled = loading;
+    btnAuth.textContent = loading ? 'Aguarde...' : (authMode === 'criar' ? 'Criar conta e entrar' : 'Entrar');
   }
 
-  btnAuth.addEventListener('click', ()=>{
+  btnAuth.addEventListener('click', async ()=>{
     const email = authEmail.value.trim();
     const senha = authSenha.value;
     const confirmar = authConfirmar.value;
-    let valido = true;
 
     errEmail.textContent = '';
     errSenha.textContent = '';
@@ -1365,49 +1367,52 @@
 
     if (!validarEmail(email)){
       errEmail.textContent = 'Informe um e-mail válido.';
-      valido = false;
+      return;
     }
 
     if (authMode === 'criar'){
       if (senha.length < 8){
         errSenha.textContent = 'A senha precisa ter ao menos 8 caracteres.';
-        valido = false;
+        return;
       }
       if (senha !== confirmar){
         errConfirmar.textContent = 'As senhas não conferem.';
-        valido = false;
+        return;
       }
-      if (!valido) return;
-
-      // Salvar conta — mostrar onboarding na primeira vez
-      const hash = simpleHash(senha);
-      localStorage.setItem('qfolha_email', email);
-      localStorage.setItem('qfolha_hash', hash);
+      setAuthLoading(true);
+      const { data, error } = await sb.auth.signUp({ email, password: senha });
+      setAuthLoading(false);
+      if (error){
+        if (error.message.includes('already registered') || error.message.includes('already been registered')){
+          errEmail.textContent = 'Este e-mail já possui uma conta. Use "Já tenho conta".';
+        } else {
+          errEmail.textContent = error.message;
+        }
+        return;
+      }
+      state.user = data.user;
       showOnboarding();
 
     } else {
-      // Entrar — vai direto para o app
-      const emailSalvo = localStorage.getItem('qfolha_email');
-      const hashSalvo = localStorage.getItem('qfolha_hash');
-
-      if (!emailSalvo || email !== emailSalvo){
-        errEmail.textContent = 'E-mail não encontrado.';
-        valido = false;
-      } else if (simpleHash(senha) !== hashSalvo){
-        errSenha.textContent = 'Senha incorreta.';
-        valido = false;
+      setAuthLoading(true);
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+      setAuthLoading(false);
+      if (error){
+        if (error.message.includes('Invalid login')){
+          errSenha.textContent = 'E-mail ou senha incorretos.';
+        } else {
+          errSenha.textContent = error.message;
+        }
+        return;
       }
-      if (!valido) return;
-
+      state.user = data.user;
       viewAuth.classList.add('hidden');
-      startSplash();
+      await enterApp();
     }
   });
 
-  // Permitir login via Enter no teclado
   [authEmail, authSenha, authConfirmar].forEach(el =>{
     el.addEventListener('keydown', e =>{ if (e.key === 'Enter') btnAuth.click(); });
-    // Limpar erro ao digitar
     el.addEventListener('input', ()=>{
       if (el === authEmail) errEmail.textContent = '';
       if (el === authSenha) errSenha.textContent = '';
@@ -1475,7 +1480,7 @@
   function finishOnboarding(){
     localStorage.setItem(ONBOARDING_KEY, '1');
     viewOnboarding.classList.add('hidden');
-    startSplash();
+    enterApp();
   }
 
   btnOnboardingNext.addEventListener('click', ()=>{
@@ -1484,14 +1489,22 @@
   });
   btnOnboardingSkip.addEventListener('click', finishOnboarding);
 
+  /* ============================================================
+     ENTRAR NO APP — carrega dados do Supabase e inicia a splash
+     ============================================================ */
+  async function enterApp(){
+    startSplash();
+    await loadFromSupabase();
+    renderAll();
+  }
+
   function startSplash(){
     viewSplash.classList.remove('hidden');
     viewHome.classList.remove('hidden');
-    loadState(); // Restaura empresas e colaboradores salvos
     state.isPremium = localStorage.getItem('qfolha_premium') === '1';
-    updateTopbarAvatar(); // Exibe iniciais do usuário no topbar
+    updateTopbarAvatar();
     updatePlanBadge();
-    renderAll();
+    renderAll(); // renderiza com state.companies vazio — será atualizado após loadFromSupabase
 
     setTimeout(()=>{
       splashLogo.classList.add('to-top');
@@ -1499,13 +1512,8 @@
       if (tagline) tagline.style.display = 'none';
     }, 2600);
 
-    setTimeout(()=>{
-      viewSplash.classList.add('fade-out');
-    }, 3500);
-
-    setTimeout(()=>{
-      viewSplash.classList.add('hidden');
-    }, 4000);
+    setTimeout(()=>{ viewSplash.classList.add('fade-out'); }, 3500);
+    setTimeout(()=>{ viewSplash.classList.add('hidden'); }, 4000);
   }
 
   /* ============================================================
@@ -1705,7 +1713,7 @@
             state.activeCompanyId = restantes.length > 0 ? restantes[0].id : null;
           }
           state.companies = state.companies.filter(c=> c.id !== company.id);
-          saveState();
+          deleteCompany(company.id);
           renderEmpresasTab();
           renderCompanySwitcher();
           showToast(`"${company.nome || 'Empresa'}" excluída`);
@@ -1729,7 +1737,7 @@
         showToast('Plano gratuito permite apenas 1 empresa');
         return;
       }
-      const draft = { id: 'c_' + Date.now(), nome:'', cnpj:'', endereco:'', gerenteNome:'', gerenteTelefone:'', regime:'simples', funcionarios:[] };
+      const draft = { id: crypto.randomUUID(), nome:'', cnpj:'', endereco:'', gerenteNome:'', gerenteTelefone:'', regime:'simples', funcionarios:[] };
       openCompanyForm(draft, true);
     });
     companyAddZoneEl.appendChild(addBtn);
@@ -1820,7 +1828,7 @@
       state.activeCompanyId = company.id;
       renderEmpresasTab();
       showToast('Empresa salva');
-      saveState();
+      saveCompany(company);
     });
   }
 
@@ -2032,7 +2040,7 @@
 
   function emptyFuncionario(){
     return {
-      id: 'f_' + Date.now(),
+      id: crypto.randomUUID(),
       nome: '',
       cargo: '',
       bruto: '',
@@ -2120,10 +2128,11 @@
         });
         card.querySelector('[data-action="delete"]').addEventListener('click', (e)=>{
           e.stopPropagation();
-          company.funcionarios = company.funcionarios.filter(f=> f.id !== funcionario.id);
+          const fId = funcionario.id;
+          company.funcionarios = company.funcionarios.filter(f=> f.id !== fId);
           renderFuncionariosTab();
           showToast('Colaborador excluído');
-          saveState();
+          deleteEmployee(fId);
         });
         employeeListEl.appendChild(card);
       });
@@ -2183,7 +2192,7 @@
       }
       employeeFormWrap.classList.add('hidden');
       renderFuncionariosTab();
-      saveState();
+      saveEmployee(funcionario, company.id);
       openResult(funcionario, company);
     };
   }
@@ -2372,7 +2381,7 @@
   // options.labelFontSize: ajusta o tamanho do rótulo de percentual.
   function renderDonutFromSegments(segments, options){
     options = options || {};
-    const rInner = options.rInner !== undefined ? options.rInner : 70;
+    const rInner = options.rInner !== undefined ? options.rInner : 45;
     const labelFontSize = options.labelFontSize || 15;
 
     segments = segments.filter(s=> s.value > 0.005);
@@ -2963,7 +2972,7 @@
       const partes = nome.trim().split(/\s+/);
       return (partes[0][0] + (partes[1] ? partes[1][0] : '')).toUpperCase();
     }
-    const email = localStorage.getItem('qfolha_email') || '';
+    const email = (state.user && state.user.email) || '';
     return email ? email[0].toUpperCase() : '?';
   }
 
@@ -3011,7 +3020,7 @@
   // --- Menu principal da conta ---
   function renderAccountMenu(){
     accountSheetTitleEl.textContent = 'Minha conta';
-    const email = localStorage.getItem('qfolha_email') || '';
+    const email = (state.user && state.user.email) || '';
     const nome = localStorage.getItem('qfolha_nome') || '';
     const isPremium = state.isPremium;
     accountSheetBodyEl.innerHTML = `
@@ -3087,8 +3096,12 @@
     document.getElementById('menu-editar-nome').addEventListener('click', renderEditarNome);
     document.getElementById('menu-alterar-senha').addEventListener('click', renderAlterarSenha);
     document.getElementById('menu-resetar').addEventListener('click', renderResetarDados);
-    document.getElementById('menu-sair').addEventListener('click', ()=>{
+    document.getElementById('menu-sair').addEventListener('click', async ()=>{
       closeAccountSheet();
+      await sb.auth.signOut();
+      state.user = null;
+      state.companies = [];
+      state.activeCompanyId = null;
       viewHome.classList.add('hidden');
       viewDisclaimer.classList.remove('hidden');
       consentChecked = false;
@@ -3172,9 +3185,8 @@
     `;
 
     document.getElementById('btn-reset-cancelar').addEventListener('click', renderAccountMenu);
-    document.getElementById('btn-reset-confirmar').addEventListener('click', ()=>{
-      // Apaga dados mas preserva e-mail e senha
-      localStorage.removeItem('qfolha_data');
+    document.getElementById('btn-reset-confirmar').addEventListener('click', async ()=>{
+      await deleteAllData();
       localStorage.removeItem('qfolha_nome');
       state.companies = [];
       state.activeCompanyId = null;
@@ -3311,32 +3323,38 @@
 
     document.getElementById('btn-pwd-cancelar').addEventListener('click', renderAccountMenu);
 
-    document.getElementById('btn-pwd-salvar').addEventListener('click', ()=>{
+    document.getElementById('btn-pwd-salvar').addEventListener('click', async ()=>{
       const atual = document.getElementById('pwd-atual').value;
       const nova = document.getElementById('pwd-nova').value;
       const confirmar = document.getElementById('pwd-confirmar').value;
-      let valido = true;
 
       document.getElementById('err-pwd-atual').textContent = '';
       document.getElementById('err-pwd-nova').textContent = '';
       document.getElementById('err-pwd-confirmar').textContent = '';
 
-      const hashSalvo = localStorage.getItem('qfolha_hash');
-      if (simpleHash(atual) !== hashSalvo){
-        document.getElementById('err-pwd-atual').textContent = 'Senha atual incorreta.';
-        valido = false;
-      }
       if (nova.length < 8){
         document.getElementById('err-pwd-nova').textContent = 'A nova senha precisa ter ao menos 8 caracteres.';
-        valido = false;
+        return;
       }
       if (nova !== confirmar){
         document.getElementById('err-pwd-confirmar').textContent = 'As senhas não conferem.';
-        valido = false;
+        return;
       }
-      if (!valido) return;
 
-      localStorage.setItem('qfolha_hash', simpleHash(nova));
+      // Verificar senha atual fazendo re-login
+      const email = state.user && state.user.email;
+      const { error: loginError } = await sb.auth.signInWithPassword({ email, password: atual });
+      if (loginError){
+        document.getElementById('err-pwd-atual').textContent = 'Senha atual incorreta.';
+        return;
+      }
+
+      // Atualizar senha no Supabase
+      const { error } = await sb.auth.updateUser({ password: nova });
+      if (error){
+        document.getElementById('err-pwd-nova').textContent = error.message;
+        return;
+      }
       closeAccountSheet();
       showToast('Senha alterada com sucesso');
     });
@@ -3344,31 +3362,104 @@
 
 
   /* ============================================================
-     PERSISTÊNCIA DE DADOS (localStorage)
-     Chave: qfolha_data — armazena companies e activeCompanyId.
-     Salvo a cada mudança relevante; carregado logo após o login.
+     PERSISTÊNCIA DE DADOS — Supabase
+     Empresas e colaboradores salvos no banco PostgreSQL.
+     Cada operação de mutação chama a API do Supabase.
      ============================================================ */
-  const LS_DATA_KEY = 'qfolha_data';
 
-  function saveState(){
+  // Carrega todas as empresas + colaboradores do usuário autenticado
+  async function loadFromSupabase(){
+    if (!state.user) return;
     try {
-      const payload = {
-        companies: state.companies,
-        activeCompanyId: state.activeCompanyId,
-      };
-      localStorage.setItem(LS_DATA_KEY, JSON.stringify(payload));
-    } catch(e){ /* localStorage cheio ou indisponível — sem bloqueio */ }
+      const { data: companies, error: ce } = await sb
+        .from('companies')
+        .select('*, employees(*)')
+        .eq('user_id', state.user.id)
+        .order('created_at');
+      if (ce) throw ce;
+
+      state.companies = (companies || []).map(c => ({
+        id: c.id,
+        nome: c.nome || '',
+        cnpj: c.cnpj || '',
+        endereco: c.endereco || '',
+        gerenteNome: c.gerente_nome || '',
+        gerenteTelefone: c.gerente_telefone || '',
+        regime: c.regime || 'simples',
+        funcionarios: (c.employees || []).map(e => ({
+          id: e.id,
+          nome: e.nome || '',
+          cargo: e.cargo || '',
+          bruto: e.bruto || 0,
+          beneficios: e.beneficios || { vt:{on:false,valor:0}, vr:{on:false,valor:0}, saude:{on:false,valor:0}, outros:{on:false,valor:0} },
+        }))
+      }));
+
+      if (!state.activeCompanyId && state.companies.length > 0){
+        state.activeCompanyId = state.companies[0].id;
+      }
+      renderAll();
+    } catch(e){
+      console.error('Erro ao carregar dados:', e);
+    }
   }
 
-  function loadState(){
-    try {
-      const raw = localStorage.getItem(LS_DATA_KEY);
-      if (!raw) return;
-      const payload = JSON.parse(raw);
-      if (Array.isArray(payload.companies)) state.companies = payload.companies;
-      if (payload.activeCompanyId) state.activeCompanyId = payload.activeCompanyId;
-    } catch(e){ /* dados corrompidos — começa do zero */ }
+  // Salva ou atualiza uma empresa no Supabase
+  async function saveCompany(company){
+    if (!state.user) return;
+    const payload = {
+      id: company.id,
+      user_id: state.user.id,
+      nome: company.nome,
+      cnpj: company.cnpj,
+      endereco: company.endereco,
+      gerente_nome: company.gerenteNome,
+      gerente_telefone: company.gerenteTelefone,
+      regime: company.regime,
+    };
+    const { error } = await sb.from('companies').upsert(payload);
+    if (error) console.error('Erro ao salvar empresa:', error);
   }
+
+  // Remove uma empresa do Supabase
+  async function deleteCompany(companyId){
+    if (!state.user) return;
+    const { error } = await sb.from('companies').delete().eq('id', companyId);
+    if (error) console.error('Erro ao excluir empresa:', error);
+  }
+
+  // Salva ou atualiza um colaborador no Supabase
+  async function saveEmployee(employee, companyId){
+    if (!state.user) return;
+    const payload = {
+      id: employee.id,
+      user_id: state.user.id,
+      company_id: companyId,
+      nome: employee.nome,
+      cargo: employee.cargo,
+      bruto: employee.bruto,
+      beneficios: employee.beneficios,
+    };
+    const { error } = await sb.from('employees').upsert(payload);
+    if (error) console.error('Erro ao salvar colaborador:', error);
+  }
+
+  // Remove um colaborador do Supabase
+  async function deleteEmployee(employeeId){
+    if (!state.user) return;
+    const { error } = await sb.from('employees').delete().eq('id', employeeId);
+    if (error) console.error('Erro ao excluir colaborador:', error);
+  }
+
+  // Remove todos os dados do usuário (reset)
+  async function deleteAllData(){
+    if (!state.user) return;
+    await sb.from('companies').delete().eq('user_id', state.user.id);
+  }
+
+  // Mantém saveState como no-op para compatibilidade com chamadas existentes
+  function saveState(){}
+  function loadState(){}
 
   function renderAll(){
     renderCompanySwitcher();
@@ -3379,7 +3470,19 @@
     renderRelatoriosTab();
   }
 
+  // Verificar sessão ativa ao carregar a página (auto-login)
+  (async ()=>{
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && session.user){
+      state.user = session.user;
+      // Pular disclaimer — ir direto para o app
+      viewDisclaimer.classList.add('hidden');
+      await enterApp();
+    }
+  })();
+
 })();
+
 </script>
 </body>
 </html>
