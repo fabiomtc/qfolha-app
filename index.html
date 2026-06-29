@@ -1256,7 +1256,14 @@
       state.user = session.user;
       await enterApp();
     } else {
-      viewAuth.classList.remove('hidden');
+      // Mostrar splash antes da tela de login
+      viewSplash.classList.remove('hidden');
+      setTimeout(()=>{ viewSplash.classList.add('fade-out'); }, 2000);
+      setTimeout(()=>{
+        viewSplash.classList.add('hidden');
+        viewSplash.classList.remove('fade-out');
+        viewAuth.classList.remove('hidden');
+      }, 2500);
     }
   });
 
