@@ -1414,10 +1414,7 @@
         return;
       }
       state.user = data.user;
-      viewAuth.classList.add('hidden');
-      await enterApp();
-
-    } else {
+      showOnboarding();
       setAuthLoading(true);
       const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
       setAuthLoading(false);
@@ -1477,10 +1474,10 @@
   let onboardingStep = 0;
 
   function showOnboarding(){
-    onboardingStep = 0;
+    // Pular slides de tutorial — entrar direto no app
     viewAuth.classList.add('hidden');
-    viewOnboarding.classList.remove('hidden');
-    renderOnboardingSlide();
+    localStorage.setItem(ONBOARDING_KEY, '1');
+    enterApp();
   }
 
   function renderOnboardingSlide(){
