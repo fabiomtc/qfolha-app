@@ -167,9 +167,9 @@
   .hidden{ display:none !important; }
 
   /* ============ DISCLAIMER ============ */
-  #view-disclaimer{ padding: 28px 22px; gap: 20px; }
+  #view-disclaimer{ padding: 28px 22px 32px; gap: 16px; overflow-y: auto; }
   .disclaimer-scroll{
-    flex:1; overflow-y:auto; padding-right:4px;
+    flex:0 1 auto; overflow-y:visible; padding-right:4px;
   }
   .disclaimer-scroll::-webkit-scrollbar{ width:4px; }
   .disclaimer-scroll::-webkit-scrollbar-thumb{ background: var(--border); border-radius:4px; }
@@ -1415,20 +1415,22 @@
       }
       state.user = data.user;
       showOnboarding();
+
+    } else {
       setAuthLoading(true);
-      const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+      const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({ email, password: senha });
       setAuthLoading(false);
-      if (error){
-        if (error.message.includes('Invalid login') || error.message.includes('invalid_credentials')){
+      if (loginError){
+        if (loginError.message.includes('Invalid login') || loginError.message.includes('invalid_credentials')){
           errSenha.textContent = 'E-mail ou senha incorretos.';
-        } else if (error.message.includes('Email not confirmed')){
+        } else if (loginError.message.includes('Email not confirmed')){
           errEmail.textContent = 'E-mail ainda não confirmado. Verifique sua caixa de entrada.';
         } else {
-          errSenha.textContent = error.message;
+          errSenha.textContent = loginError.message;
         }
         return;
       }
-      state.user = data.user;
+      state.user = loginData.user;
       viewAuth.classList.add('hidden');
       await enterApp();
     }
