@@ -1414,7 +1414,8 @@
         return;
       }
       state.user = data.user;
-      showOnboarding();
+      viewAuth.classList.add('hidden');
+      await enterApp();
 
     } else {
       setAuthLoading(true);
