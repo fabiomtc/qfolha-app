@@ -1003,7 +1003,7 @@
           </div>
           <div>
             <label class="field-label">Salário bruto mensal (R$)</label>
-            <input class="field-input" id="input-emp-bruto" type="number" inputmode="decimal" placeholder="Ex: 2000" />
+            <input class="field-input" id="input-emp-bruto" type="text" inputmode="decimal" placeholder="Ex: 2.500,00" />
           </div>
 
           <div>
@@ -1017,7 +1017,7 @@
                 <div class="switch" data-switch="vt"></div>
               </div>
               <div class="benefit-amount hidden" data-amount="vt">
-                <input class="field-input" id="input-emp-vt" type="number" inputmode="decimal" placeholder="Valor mensal do VT (R$)" />
+                <input class="field-input" id="input-emp-vt" type="text" inputmode="decimal" placeholder="Ex: 150,00" />
               </div>
 
               <div class="toggle-row" data-benefit="vr">
@@ -1028,7 +1028,7 @@
                 <div class="switch" data-switch="vr"></div>
               </div>
               <div class="benefit-amount hidden" data-amount="vr">
-                <input class="field-input" id="input-emp-vr" type="number" inputmode="decimal" placeholder="Valor mensal de VR/VA (R$)" />
+                <input class="field-input" id="input-emp-vr" type="text" inputmode="decimal" placeholder="Ex: 30,00" />
               </div>
 
               <div class="toggle-row" data-benefit="saude">
@@ -1039,7 +1039,7 @@
                 <div class="switch" data-switch="saude"></div>
               </div>
               <div class="benefit-amount hidden" data-amount="saude">
-                <input class="field-input" id="input-emp-saude" type="number" inputmode="decimal" placeholder="Valor mensal do plano (R$)" />
+                <input class="field-input" id="input-emp-saude" type="text" inputmode="decimal" placeholder="Ex: 500,00" />
               </div>
 
               <div class="toggle-row" data-benefit="outros">
@@ -1050,7 +1050,7 @@
                 <div class="switch" data-switch="outros"></div>
               </div>
               <div class="benefit-amount hidden" data-amount="outros">
-                <input class="field-input" id="input-emp-outros" type="number" inputmode="decimal" placeholder="Valor mensal (R$)" />
+                <input class="field-input" id="input-emp-outros" type="text" inputmode="decimal" placeholder="Ex: 100,00" />
               </div>
             </div>
           </div>
@@ -2208,7 +2208,7 @@
     document.getElementById('btn-calc-emp').onclick = ()=>{
       funcionario.nome = inputNome.value.trim();
       funcionario.cargo = inputCargo.value.trim();
-      funcionario.bruto = Number(inputBruto.value) || 0;
+      funcionario.bruto = Number(inputBruto.value.replace(/\./g, '').replace(',', '.')) || 0;
 
       if (funcionario.bruto <= 0){
         showToast('Informe o salário bruto');
@@ -2216,7 +2216,7 @@
       }
 
       ['vt','vr','saude','outros'].forEach(key=>{
-        funcionario.beneficios[key].valor = Number(document.getElementById('input-emp-' + key).value) || 0;
+        funcionario.beneficios[key].valor = Number((document.getElementById('input-emp-' + key).value || '0').replace(/\./g, '').replace(',', '.')) || 0;
       });
 
       if (!isEdit){
