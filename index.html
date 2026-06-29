@@ -1390,6 +1390,29 @@
         }
         return;
       }
+      // Supabase pode exigir confirmação de e-mail antes de liberar a sessão
+      if (data.user && !data.session){
+        // E-mail de confirmação enviado — avisar o usuário
+        errEmail.textContent = '';
+        errSenha.textContent = '';
+        errConfirmar.textContent = '';
+        btnAuth.disabled = true;
+        btnAuth.textContent = '✉️ Confirme seu e-mail';
+        const authForm = document.getElementById('auth-form');
+        authForm.insertAdjacentHTML('beforebegin', `
+          <div id="email-confirm-notice" style="
+            background: var(--accent-soft); border: 1px solid var(--accent);
+            border-radius: var(--radius-md); padding: 14px 16px;
+            font-size: 13.5px; line-height: 1.55; color: var(--text);
+          ">
+            <strong>Verifique seu e-mail!</strong><br>
+            Enviamos um link de confirmação para <strong>${email}</strong>.<br>
+            Clique no link e volte aqui para entrar com "Já tenho conta".
+          </div>
+        `);
+        tabEntrar.click();
+        return;
+      }
       state.user = data.user;
       showOnboarding();
 
@@ -1398,8 +1421,10 @@
       const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
       setAuthLoading(false);
       if (error){
-        if (error.message.includes('Invalid login')){
+        if (error.message.includes('Invalid login') || error.message.includes('invalid_credentials')){
           errSenha.textContent = 'E-mail ou senha incorretos.';
+        } else if (error.message.includes('Email not confirmed')){
+          errEmail.textContent = 'E-mail ainda não confirmado. Verifique sua caixa de entrada.';
         } else {
           errSenha.textContent = error.message;
         }
