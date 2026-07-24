@@ -167,12 +167,12 @@
   .hidden{ display:none !important; }
 
   /* ============ DISCLAIMER ============ */
-  #view-disclaimer{ padding: 28px 22px; gap: 20px; }
+  #view-disclaimer{ padding: 28px 22px 40px; gap: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #app:has(#view-disclaimer:not(.hidden)){ overflow-y: auto; }
   .disclaimer-scroll{
-    flex:1; overflow-y:auto; padding-right:4px;
+    flex: none; overflow-y: visible; padding-right: 0;
   }
-  .disclaimer-scroll::-webkit-scrollbar{ width:4px; }
-  .disclaimer-scroll::-webkit-scrollbar-thumb{ background: var(--border); border-radius:4px; }
+  .disclaimer-scroll::-webkit-scrollbar{ display: none; }
   .disclaimer-block{
     background: var(--surface); border:1px solid var(--border);
     border-radius: var(--radius-md); padding:16px; margin-bottom:12px;
@@ -2451,7 +2451,7 @@
 
     segments = segments.filter(s=> s.value > 0.005);
     const total = segments.reduce((sum,s)=> sum + s.value, 0) || 1;
-    const CX = 110, CY = 110, R_OUT = 85, R_IN = rInner;
+    const CX = 120, CY = 120, R_OUT = 90, R_IN = rInner;
 
     let acc = 0;
     let slicesSvg = '';
@@ -2465,27 +2465,33 @@
 
       slicesSvg += `<path d="${donutSlicePath(CX, CY, R_OUT, R_IN, startAngle, endAngle)}" style="fill:${s.color};"/>`;
 
-      // Labels fora do donut com linha de conexão
       if (pct >= 4){
         const mid = (startAngle + endAngle) / 2;
-        const pInner = polarToCartesian(CX, CY, R_OUT + 6, mid);
-        const pOuter = polarToCartesian(CX, CY, R_OUT + 18, mid);
-        const anchor = pOuter.x > CX ? 'start' : 'end';
-        const pText = { x: pOuter.x + (pOuter.x > CX ? 4 : -4), y: pOuter.y };
+        const pEdge  = polarToCartesian(CX, CY, R_OUT + 4, mid);
+        const pElbow = polarToCartesian(CX, CY, R_OUT + 22, mid);
+        const isRight = pElbow.x >= CX;
+        const pEnd   = { x: isRight ? pElbow.x + 14 : pElbow.x - 14, y: pElbow.y };
+        const anchor = isRight ? 'start' : 'end';
+        const label  = formatPercent(pct).replace(',0','');
+
         labelsSvg += `
-          <line x1="${pInner.x}" y1="${pInner.y}" x2="${pOuter.x}" y2="${pOuter.y}" stroke="${s.color}" stroke-width="1.5" stroke-linecap="round"/>
-          <text x="${pText.x}" y="${pText.y}" text-anchor="${anchor}" dominant-baseline="central" style="font-size:11px;font-weight:700;fill:${s.color};">${formatPercent(pct).replace(',0','')}</text>
+          <polyline points="${pEdge.x},${pEdge.y} ${pElbow.x},${pElbow.y} ${pEnd.x},${pEnd.y}"
+            fill="none" stroke="${s.color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="${pEnd.x + (isRight ? 3 : -3)}" y="${pEnd.y}"
+            text-anchor="${anchor}" dominant-baseline="central"
+            style="font-size:12px;font-weight:800;fill:${s.color};">${label}</text>
         `;
       }
     });
 
     const donutSvg = `
-      <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
         ${slicesSvg}
         ${labelsSvg}
       </svg>
     `;
 
+    // Legenda sem percentual (já está no gráfico)
     const legendHtml = segments.map(s=> `
       <div class="legend-item">
         <div class="legend-left">
@@ -2494,7 +2500,6 @@
         </div>
         <div style="text-align:right;">
           <div class="legend-value">${formatBRL(s.value)}</div>
-          <div class="legend-percent">${formatPercent((s.value / total) * 100)}</div>
         </div>
       </div>
     `).join('');
