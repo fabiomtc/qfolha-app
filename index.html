@@ -490,9 +490,9 @@
   /* ============ DONUT CHART ============ */
   .donut-wrap{ display:flex; flex-direction:column; align-items:center; gap:18px; }
   .donut{
-    width:220px; height:220px; position:relative; flex-shrink:0;
+    width:200px; height:200px; position:relative; flex-shrink:0;
   }
-  .donut svg{ position:absolute; inset:-30px -50px; width:calc(100% + 100px); height:calc(100% + 60px); overflow:visible; }
+  .donut svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
   .donut-slice-label{
     font-size:11px; font-weight:800; fill:#fff;
     paint-order: stroke;
@@ -2448,11 +2448,13 @@
   // options.labelFontSize: ajusta o tamanho do rótulo de percentual.
   function renderDonutFromSegments(segments, options){
     options = options || {};
-    const rInner = options.rInner !== undefined ? options.rInner : 52;
+    const rInner = options.rInner !== undefined ? options.rInner : 50;
 
     segments = segments.filter(s=> s.value > 0.005);
     const total = segments.reduce((sum,s)=> sum + s.value, 0) || 1;
-    const CX = 160, CY = 160, R_OUT = 90, R_IN = rInner;
+
+    // Tudo centrado em 100,100 dentro de um viewBox 200x200
+    const CX = 100, CY = 100, R_OUT = 75, R_IN = rInner;
 
     let acc = 0;
     let slicesSvg = '';
@@ -2468,25 +2470,26 @@
 
       if (pct >= 4){
         const mid = (startAngle + endAngle) / 2;
-        const pEdge  = polarToCartesian(CX, CY, R_OUT + 6, mid);
-        const pElbow = polarToCartesian(CX, CY, R_OUT + 26, mid);
+        const pEdge  = polarToCartesian(CX, CY, R_OUT + 4, mid);
+        const pElbow = polarToCartesian(CX, CY, R_OUT + 18, mid);
         const isRight = pElbow.x >= CX;
-        const pEnd   = { x: isRight ? pElbow.x + 20 : pElbow.x - 20, y: pElbow.y };
+        const pEnd   = { x: isRight ? pElbow.x + 16 : pElbow.x - 16, y: pElbow.y };
         const anchor = isRight ? 'start' : 'end';
         const label  = formatPercent(pct).replace(',0','');
 
         labelsSvg += `
           <polyline points="${pEdge.x},${pEdge.y} ${pElbow.x},${pElbow.y} ${pEnd.x},${pEnd.y}"
-            fill="none" stroke="${s.color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <text x="${pEnd.x + (isRight ? 3 : -3)}" y="${pEnd.y}"
+            fill="none" stroke="${s.color}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="${pEnd.x + (isRight ? 2 : -2)}" y="${pEnd.y}"
             text-anchor="${anchor}" dominant-baseline="central"
-            style="font-size:14px;font-weight:800;fill:${s.color};">${label}</text>
+            style="font-size:10px;font-weight:800;fill:${s.color};">${label}</text>
         `;
       }
     });
 
+    // viewBox com folga nas bordas para os labels externos não serem cortados
     const donutSvg = `
-      <svg viewBox="-10 0 340 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible;">
+      <svg viewBox="-30 -30 260 260" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
         ${slicesSvg}
         ${labelsSvg}
       </svg>
