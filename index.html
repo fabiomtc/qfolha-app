@@ -492,7 +492,7 @@
   .donut{
     width:220px; height:220px; position:relative; flex-shrink:0;
   }
-  .donut svg{ position:absolute; inset:-30px; width:calc(100% + 60px); height:calc(100% + 60px); overflow:visible; }
+  .donut svg{ position:absolute; inset:-30px -50px; width:calc(100% + 100px); height:calc(100% + 60px); overflow:visible; }
   .donut-slice-label{
     font-size:11px; font-weight:800; fill:#fff;
     paint-order: stroke;
@@ -2486,7 +2486,7 @@
     });
 
     const donutSvg = `
-      <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible;">
+      <svg viewBox="-10 0 340 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible;">
         ${slicesSvg}
         ${labelsSvg}
       </svg>
