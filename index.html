@@ -490,9 +490,9 @@
   /* ============ DONUT CHART ============ */
   .donut-wrap{ display:flex; flex-direction:column; align-items:center; gap:18px; }
   .donut{
-    width:168px; height:168px; position:relative; flex-shrink:0;
+    width:220px; height:220px; position:relative; flex-shrink:0;
   }
-  .donut svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .donut svg{ position:absolute; inset:-30px; width:calc(100% + 60px); height:calc(100% + 60px); overflow:visible; }
   .donut-slice-label{
     font-size:11px; font-weight:800; fill:#fff;
     paint-order: stroke;
@@ -564,8 +564,9 @@
     display:flex; flex-direction:column;
     transform: translateY(100%);
     transition: transform .35s cubic-bezier(.4,0,.2,1);
+    visibility: hidden;
   }
-  #view-result.show{ transform: translateY(0); }
+  #view-result.show{ transform: translateY(0); visibility: visible; }
   .result-header{
     display:flex; align-items:center; justify-content:space-between;
     padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink:0;
@@ -2447,11 +2448,11 @@
   // options.labelFontSize: ajusta o tamanho do rótulo de percentual.
   function renderDonutFromSegments(segments, options){
     options = options || {};
-    const rInner = options.rInner !== undefined ? options.rInner : 48;
+    const rInner = options.rInner !== undefined ? options.rInner : 52;
 
     segments = segments.filter(s=> s.value > 0.005);
     const total = segments.reduce((sum,s)=> sum + s.value, 0) || 1;
-    const CX = 120, CY = 120, R_OUT = 90, R_IN = rInner;
+    const CX = 160, CY = 160, R_OUT = 90, R_IN = rInner;
 
     let acc = 0;
     let slicesSvg = '';
@@ -2467,10 +2468,10 @@
 
       if (pct >= 4){
         const mid = (startAngle + endAngle) / 2;
-        const pEdge  = polarToCartesian(CX, CY, R_OUT + 4, mid);
-        const pElbow = polarToCartesian(CX, CY, R_OUT + 22, mid);
+        const pEdge  = polarToCartesian(CX, CY, R_OUT + 6, mid);
+        const pElbow = polarToCartesian(CX, CY, R_OUT + 26, mid);
         const isRight = pElbow.x >= CX;
-        const pEnd   = { x: isRight ? pElbow.x + 14 : pElbow.x - 14, y: pElbow.y };
+        const pEnd   = { x: isRight ? pElbow.x + 20 : pElbow.x - 20, y: pElbow.y };
         const anchor = isRight ? 'start' : 'end';
         const label  = formatPercent(pct).replace(',0','');
 
@@ -2479,19 +2480,18 @@
             fill="none" stroke="${s.color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           <text x="${pEnd.x + (isRight ? 3 : -3)}" y="${pEnd.y}"
             text-anchor="${anchor}" dominant-baseline="central"
-            style="font-size:12px;font-weight:800;fill:${s.color};">${label}</text>
+            style="font-size:14px;font-weight:800;fill:${s.color};">${label}</text>
         `;
       }
     });
 
     const donutSvg = `
-      <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible;">
         ${slicesSvg}
         ${labelsSvg}
       </svg>
     `;
 
-    // Legenda sem percentual (já está no gráfico)
     const legendHtml = segments.map(s=> `
       <div class="legend-item">
         <div class="legend-left">
