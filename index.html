@@ -1945,6 +1945,38 @@
     return (Number(value) || 0).toFixed(1).replace('.', ',') + '%';
   }
 
+  // Máscara bancária para inputs de valor (R$ 1.234,56)
+  function applyMoneyMask(input){
+    input.addEventListener('input', function(){
+      let v = this.value.replace(/\D/g, '');
+      if (!v){ this.value = ''; return; }
+      v = (parseInt(v, 10) / 100).toFixed(2);
+      const [intPart, decPart] = v.split('.');
+      const withThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      this.value = 'R$ ' + withThousands + ',' + decPart;
+    });
+    input.addEventListener('focus', function(){
+      if (!this.value) this.value = 'R$ 0,00';
+      setTimeout(()=> this.setSelectionRange(this.value.length, this.value.length), 0);
+    });
+    input.addEventListener('blur', function(){
+      if (this.value === 'R$ 0,00') this.value = '';
+    });
+  }
+
+  function parseMoneyMask(val){
+    return Number((val || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0;
+  }
+
+  function formatMoneyMask(val){
+    const n = Number(val) || 0;
+    if (!n) return '';
+    const fixed = n.toFixed(2);
+    const [intPart, decPart] = fixed.split('.');
+    const withThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return 'R$ ' + withThousands + ',' + decPart;
+  }
+
   function formatDateBR(date){
     const d = String(date.getDate()).padStart(2, '0');
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -2183,7 +2215,8 @@
     const inputBruto = document.getElementById('input-emp-bruto');
     inputNome.value = funcionario.nome || '';
     inputCargo.value = funcionario.cargo || '';
-    inputBruto.value = funcionario.bruto || '';
+    inputBruto.value = formatMoneyMask(funcionario.bruto);
+    applyMoneyMask(inputBruto);
 
     ['vt','vr','saude','outros'].forEach(key=>{
       const sw = employeeFormWrap.querySelector(`[data-switch="${key}"]`);
@@ -2192,7 +2225,8 @@
       const benefit = funcionario.beneficios[key];
       sw.classList.toggle('on', !!benefit.on);
       amountWrap.classList.toggle('hidden', !benefit.on);
-      input.value = benefit.valor || '';
+      input.value = formatMoneyMask(benefit.valor);
+      applyMoneyMask(input);
 
       sw.onclick = ()=>{
         funcionario.beneficios[key].on = !funcionario.beneficios[key].on;
@@ -2208,7 +2242,7 @@
     document.getElementById('btn-calc-emp').onclick = ()=>{
       funcionario.nome = inputNome.value.trim();
       funcionario.cargo = inputCargo.value.trim();
-      funcionario.bruto = Number(inputBruto.value.replace(/\./g, '').replace(',', '.')) || 0;
+      funcionario.bruto = parseMoneyMask(inputBruto.value);
 
       if (funcionario.bruto <= 0){
         showToast('Informe o salário bruto');
@@ -2216,7 +2250,7 @@
       }
 
       ['vt','vr','saude','outros'].forEach(key=>{
-        funcionario.beneficios[key].valor = Number((document.getElementById('input-emp-' + key).value || '0').replace(/\./g, '').replace(',', '.')) || 0;
+        funcionario.beneficios[key].valor = parseMoneyMask(document.getElementById('input-emp-' + key).value);
       });
 
       if (!isEdit){
@@ -2413,17 +2447,16 @@
   // options.labelFontSize: ajusta o tamanho do rótulo de percentual.
   function renderDonutFromSegments(segments, options){
     options = options || {};
-    const rInner = options.rInner !== undefined ? options.rInner : 45;
-    const labelFontSize = options.labelFontSize || 15;
+    const rInner = options.rInner !== undefined ? options.rInner : 48;
 
     segments = segments.filter(s=> s.value > 0.005);
     const total = segments.reduce((sum,s)=> sum + s.value, 0) || 1;
-    const CX = 100, CY = 100, R_OUT = 98, R_IN = rInner;
-    const R_LABEL = rInner > 0 ? (R_OUT + R_IN) / 2 : R_OUT * 0.62;
+    const CX = 110, CY = 110, R_OUT = 85, R_IN = rInner;
 
     let acc = 0;
     let slicesSvg = '';
     let labelsSvg = '';
+
     segments.forEach(s=>{
       const pct = (s.value / total) * 100;
       const startAngle = (acc / total) * 360;
@@ -2432,18 +2465,22 @@
 
       slicesSvg += `<path d="${donutSlicePath(CX, CY, R_OUT, R_IN, startAngle, endAngle)}" style="fill:${s.color};"/>`;
 
-      // Rótulo de percentual sobre a fatia (apenas se houver espaço suficiente).
-      if (pct >= 5){
+      // Labels fora do donut com linha de conexão
+      if (pct >= 4){
         const mid = (startAngle + endAngle) / 2;
-        const pos = polarToCartesian(CX, CY, R_LABEL, mid);
+        const pInner = polarToCartesian(CX, CY, R_OUT + 6, mid);
+        const pOuter = polarToCartesian(CX, CY, R_OUT + 18, mid);
+        const anchor = pOuter.x > CX ? 'start' : 'end';
+        const pText = { x: pOuter.x + (pOuter.x > CX ? 4 : -4), y: pOuter.y };
         labelsSvg += `
-          <text class="donut-slice-label" style="font-size:${labelFontSize}px;" x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="central">${formatPercent(pct).replace(',0', '')}</text>
+          <line x1="${pInner.x}" y1="${pInner.y}" x2="${pOuter.x}" y2="${pOuter.y}" stroke="${s.color}" stroke-width="1.5" stroke-linecap="round"/>
+          <text x="${pText.x}" y="${pText.y}" text-anchor="${anchor}" dominant-baseline="central" style="font-size:11px;font-weight:700;fill:${s.color};">${formatPercent(pct).replace(',0','')}</text>
         `;
       }
     });
 
     const donutSvg = `
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
         ${slicesSvg}
         ${labelsSvg}
       </svg>
